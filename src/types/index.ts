@@ -11,7 +11,7 @@ export interface ThemeType {
     background: string;
     text: string;
   };
-  scheme: 'light' | 'dark';
+  scheme: 'light' | 'dark' | string;
   toggleScheme: (toScheme?: string) => void;
 }
 
@@ -52,6 +52,17 @@ export interface ImageProps {
   className?: string;
   src: string | undefined;
   alt?: string | undefined;
+}
+
+export interface CheckboxProps {
+  checked?: boolean;
+  onChange?: (status: boolean) => void;
+  color?: string;
+  size?: number;
+  className?: string;
+  style?: object;
+  ActiveIcon?: React.ReactNode;
+  InactiveIcon?: React.ReactNode;
 }
 
 export interface ProgressBarProps {
@@ -132,7 +143,22 @@ export interface DownloadItem {
 export interface ItemProps {
   item: DownloadItem;
   isActive?: boolean;
+  isSelectable?: boolean;
   className?: string;
   style?: object;
   onClick?: () => void;
+}
+
+export interface AppType {
+  loadingItems: boolean;
+  itemsList: DownloadItem[];
+  currentItem: DownloadItem | null;
+  loadItems: (search: string, verbose?: boolean) => Promise<void>;
+  viewDetailsOf: (item: DownloadItem) => void;
+}
+
+export interface MoreButtonProps {
+  color?: string;
+  className?: string;
+  style?: object;
 }

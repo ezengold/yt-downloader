@@ -137,15 +137,31 @@ a {
     padding: 20px;
   }
 
+  @keyframes asideAppear {
+    0% {
+      transform: translateX(-200px);
+      opacity: 0;
+    }
+    50% {
+      transform: translateX(-10px);
+      opacity: 0.5;
+    }
+    100% {
+      transform: translateX(0px);
+      opacity: 1;
+    }
+  }
   &-aside {
     height: 100%;
     width: 400px;
     border-radius: 15px;
+    animation: asideAppear 500ms 0ms;
   }
 
   &-content {
     height: 100%;
     width: calc(100% - 420px);
+    animation: fadeIn 0.5s;
   }
 
   /* BUTTONS */

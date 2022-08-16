@@ -1,42 +1,48 @@
 import React, { useState } from 'react';
-import { Input, Item, Text, View } from 'components';
+import { Checkbox, Input, Item, MoreButton, Text, View } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
+import { useDebounce, useToggle } from 'hooks';
+import { useApp } from 'providers/app';
+
 import { IoTrashOutline } from 'react-icons/io5';
 import { CgMoreO } from 'react-icons/cg';
 import { AiOutlineSearch } from 'react-icons/ai';
-import { BsCheckSquareFill } from 'react-icons/bs';
-import { DOWNLOAD_ITEMS_LIST } from 'dataset';
+import { Dropdown } from 'react-bootstrap';
 
 const Aside = () => {
   const { colors } = useTheme();
 
+  const { loadingItems, currentItem, itemsList, loadItems, viewDetailsOf } =
+    useApp();
+
+  const [hasLoaded, setHasLoaded] = useState(false);
+
   const [search, setSearch] = useState('');
 
-  const [currentItemId, setCurrentItemId] = useState('');
+  useDebounce(
+    () => {
+      loadItems(search, !hasLoaded);
+      setHasLoaded(true);
+    },
+    500,
+    [search]
+  );
 
-  const [data, setData] = useState(DOWNLOAD_ITEMS_LIST);
-
-  const viewDetailsOf = (itemId: string) => {
-    setCurrentItemId((old) => (old === itemId ? '' : itemId));
-  };
+  const [selecting, setSelecting] = useToggle(false);
 
   return (
-    <View background={colors.card} className="ezen-aside">
+    <View background={colors?.card} className="ezen-aside">
       <View className="w-100 d-flex align-items-center justify-content-between my-2 p-4">
-        <Text color={colors.principal} size={20} font={AppFonts.PACIFICO}>
+        <Text color={colors?.principal} size={20} font={AppFonts.PACIFICO}>
           yt-Downloader
         </Text>
-        <div className="d-flex align-items-center justify-content-end">
+        <div className="d-flex align-items-end justify-content-end">
           <IoTrashOutline
-            color={colors.red}
+            color={colors?.red}
             size={20}
-            className="cursor-pointer"
+            className="cursor-pointer me-3"
           />
-          <CgMoreO
-            color={colors.principal}
-            size={20}
-            className="ms-3 cursor-pointer"
-          />
+          <MoreButton color={colors?.principal} />
         </div>
       </View>
       <div className="px-3 d-flex flex-column">
@@ -46,26 +52,34 @@ const Aside = () => {
           value={search}
           onChange={(e) => setSearch(e?.target?.value)}
           iconRight={
-            <AiOutlineSearch size={17} color={colors.text} className="mx-2" />
+            <AiOutlineSearch size={17} color={colors?.text} className="mx-2" />
           }
         />
-        <BsCheckSquareFill
-          className="my-4"
-          size={16}
-          color={colors.principal}
-          style={{ marginLeft: '15px' }}
-        />
-        {Array.isArray(data) && data.length > 0 ? (
-          data.map((item) => (
+        <div className="my-4">
+          {selecting && (
+            <Checkbox
+              size={16}
+              color={colors?.principal}
+              style={{ marginLeft: '15px' }}
+              checked={selecting}
+              onChange={setSelecting}
+            />
+          )}
+        </div>
+        {loadingItems ? (
+          <Text className="w-100 text-center my-5">Loading...</Text>
+        ) : Array.isArray(itemsList) && itemsList.length > 0 ? (
+          itemsList.map((item) => (
             <Item
               key={item.id}
               item={item}
-              isActive={item.id === currentItemId}
-              onClick={() => viewDetailsOf(item.id)}
+              isActive={item.id === currentItem?.id}
+              isSelectable={selecting}
+              onClick={() => viewDetailsOf(item)}
             />
           ))
         ) : (
-          <Text>No data available</Text>
+          <Text className="w-100 text-center my-5">No data available</Text>
         )}
       </div>
     </View>

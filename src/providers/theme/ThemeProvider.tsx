@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { ThemeType } from 'types';
 import { DarkColors, DARK_THEME, LightColors, LIGHT_THEME } from './Colors';
 
-const ThemeContext = React.createContext({});
+const ThemeContext = React.createContext<ThemeType>({});
 
-const ThemeProvider = ({ children }) => {
-  const [loading, setLoading] = useState(false);
+const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+  // const [loading, setLoading] = useState(false);
 
   const [scheme, setScheme] = useState(DARK_THEME);
 
   const [currentTheme, setCurrentTheme] = useState(DarkColors);
 
-  const toggleScheme = (toScheme: 'light' | 'dark') => {
+  const toggleScheme = (toScheme: string | undefined) => {
     if (toScheme) {
       setCurrentTheme(toScheme === DARK_THEME ? DarkColors : LightColors);
       setScheme(toScheme);
@@ -34,6 +34,6 @@ const ThemeProvider = ({ children }) => {
   );
 };
 
-const useTheme = (): ThemeType => React.useContext(ThemeContext);
+const useTheme = () => React.useContext(ThemeContext);
 
 export { useTheme, ThemeProvider, ThemeContext };
