@@ -1,5 +1,3 @@
-import { SizeUnit, SizeUnit } from 'types';
-
 export const SizeUnits = {
   BYTES: {
     title: 'B',

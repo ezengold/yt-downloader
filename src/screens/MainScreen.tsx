@@ -9,15 +9,22 @@ import ContentFolder from './ContentFolder';
 const MainScreen = () => {
   const { colors } = useTheme();
 
-  const { currentItem } = useApp();
+  const { currentItem, modalShown, ModalComponent } = useApp();
+
+  console.log(ModalComponent);
 
   return (
     <View background={colors.background} className="ezen-container">
-      <Aside />
+      <Aside renderBlur={modalShown} />
       {!!currentItem && !!currentItem?.id ? (
         <ContentFolder />
       ) : (
         <EmptyContent />
+      )}
+      {modalShown && (
+        <View className="ezen-modal-wrapper" background={`${colors.text}66`}>
+          <ModalComponent />
+        </View>
       )}
     </View>
   );

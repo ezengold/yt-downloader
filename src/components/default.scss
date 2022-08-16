@@ -135,6 +135,7 @@ a {
     align-items: flex-start;
     justify-content: space-between;
     padding: 20px;
+    position: relative;
   }
 
   @keyframes asideAppear {
@@ -152,16 +153,36 @@ a {
     }
   }
   &-aside {
-    height: 100%;
+    height: calc(100vh - 40px);
     width: 400px;
     border-radius: 15px;
     animation: asideAppear 500ms 0ms;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow: hidden;
+    transition: filter 0.5s linear;
   }
 
   &-content {
-    height: 100%;
+    height: calc(100vh - 40px);
     width: calc(100% - 420px);
     animation: fadeIn 0.5s;
+  }
+
+  &-modal {
+    transition: all 0.2s ease-in-out;
+
+    &-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      z-index: 10000;
+      // transition: filter 0.5s linear, background 0.2s ease-in-out;
+    }
   }
 
   /* BUTTONS */

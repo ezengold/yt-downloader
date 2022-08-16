@@ -5,6 +5,9 @@ import { MoreButtonProps } from 'types';
 import { useTheme } from 'providers/theme';
 import styled from 'styled-components';
 import { useClickOutside, useToggle } from 'hooks';
+import { BsFilter } from 'react-icons/bs';
+import { AiOutlineSetting } from 'react-icons/ai';
+import { FILTER, ORDER } from 'configs';
 
 const MoreButton = (props: MoreButtonProps) => {
   const { colors } = useTheme();
@@ -14,6 +17,20 @@ const MoreButton = (props: MoreButtonProps) => {
   const [show, setShow] = useToggle(false);
 
   useClickOutside(ref, () => setShow(false));
+
+  // selects
+  const toggleSelect = () => {
+    props.onToggleSelect();
+    setShow(false);
+  };
+
+  // filters
+  const toggleFilter = (filter: string) => {
+    props.onClickFilter(filter);
+    setShow(false);
+  };
+
+  // settings
 
   return (
     <div ref={ref}>
@@ -30,26 +47,82 @@ const MoreButton = (props: MoreButtonProps) => {
         isActive={show ? '1' : '0'}
         className="mt-2 d-flex flex-column"
       >
-        <MenuItem hoverColor={colors.text}>
-          <Text color={colors.text}>Select</Text>
-          <Checkbox color={colors.text} />
-        </MenuItem>
-        <MenuItem hoverColor={colors.text}>
-          <Text color={colors.text}>Select</Text>
-          <Checkbox color={colors.text} />
-        </MenuItem>
-        <MenuItem hoverColor={colors.text}>
-          <Text color={colors.text}>Select</Text>
-          <Checkbox color={colors.text} />
-        </MenuItem>
-        <MenuItem hoverColor={colors.text}>
-          <Text color={colors.text}>Select</Text>
-          <Checkbox color={colors.text} />
-        </MenuItem>
-        <MenuItem hoverColor={colors.text}>
-          <Text color={colors.text}>Select</Text>
-          <Checkbox color={colors.text} />
-        </MenuItem>
+        {show && (
+          <>
+            <MenuItem
+              indicatorColor={colors.second}
+              hoverColor={colors.text}
+              onClick={toggleSelect}
+            >
+              {props?.selecting && <div className="indicator" />}
+              <Text color={colors.text}>
+                {props?.selecting ? 'Unselect' : 'Select'}
+              </Text>
+              <Checkbox color={colors.text} />
+            </MenuItem>
+            <MenuItem
+              hoverColor={colors.text}
+              indicatorColor={colors.second}
+              onClick={() => toggleFilter(FILTER.NAME)}
+            >
+              {props?.activeFilter === FILTER.NAME && (
+                <div className="indicator" />
+              )}
+              <Text color={colors.text}>Name</Text>
+              <BsFilter
+                color={colors.text}
+                transform={`rotate(${
+                  props?.activeFilter === FILTER.NAME &&
+                  props.activeOrder === ORDER.ASC
+                    ? 180
+                    : 0
+                })`}
+              />
+            </MenuItem>
+            <MenuItem
+              hoverColor={colors.text}
+              indicatorColor={colors.second}
+              onClick={() => toggleFilter(FILTER.DATE)}
+            >
+              {props?.activeFilter === FILTER.DATE && (
+                <div className="indicator" />
+              )}
+              <Text color={colors.text}>Date</Text>
+              <BsFilter
+                color={colors.text}
+                transform={`rotate(${
+                  props?.activeFilter === FILTER.DATE &&
+                  props.activeOrder === ORDER.ASC
+                    ? 180
+                    : 0
+                })`}
+              />
+            </MenuItem>
+            <MenuItem
+              hoverColor={colors.text}
+              indicatorColor={colors.second}
+              onClick={() => toggleFilter(FILTER.SIZE)}
+            >
+              {props?.activeFilter === FILTER.SIZE && (
+                <div className="indicator" />
+              )}
+              <Text color={colors.text}>Size</Text>
+              <BsFilter
+                color={colors.text}
+                transform={`rotate(${
+                  props?.activeFilter === FILTER.SIZE &&
+                  props.activeOrder === ORDER.ASC
+                    ? 180
+                    : 0
+                })`}
+              />
+            </MenuItem>
+            <MenuItem hoverColor={colors.text}>
+              <Text color={colors.text}>Settings</Text>
+              <AiOutlineSetting color={colors.text} />
+            </MenuItem>
+          </>
+        )}
       </Content>
     </div>
   );
@@ -75,7 +148,7 @@ const MenuItem = styled.div`
     border-radius: 50%;
     background-color: ${({ indicatorColor }) => indicatorColor || 'black'};
     position: absolute;
-    left: 10px;
+    left: 7px;
   }
 `;
 

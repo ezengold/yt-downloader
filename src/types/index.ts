@@ -143,22 +143,43 @@ export interface DownloadItem {
 export interface ItemProps {
   item: DownloadItem;
   isActive?: boolean;
+  isSelected?: boolean;
   isSelectable?: boolean;
   className?: string;
   style?: object;
   onClick?: () => void;
+  onSelect?: () => void;
+}
+
+export interface PresentModalProps {
+  Component: () => JSX.Element;
+  onHide: (...args: any[]) => void;
 }
 
 export interface AppType {
   loadingItems: boolean;
   itemsList: DownloadItem[];
   currentItem: DownloadItem | null;
-  loadItems: (search: string, verbose?: boolean) => Promise<void>;
+  loadItems: (
+    search: string,
+    filter: string,
+    order: string,
+    verbose?: boolean
+  ) => Promise<void>;
   viewDetailsOf: (item: DownloadItem) => void;
+  modalShown?: boolean;
+  presentModal: (props: PresentModalProps) => void;
+  closeModal: (...args: any[]) => void;
+  ModalComponent: () => JSX.Element;
 }
 
 export interface MoreButtonProps {
+  selecting?: boolean;
+  onToggleSelect: () => void;
   color?: string;
   className?: string;
   style?: object;
+  activeOrder?: string;
+  activeFilter?: string;
+  onClickFilter: (filter: string) => void;
 }

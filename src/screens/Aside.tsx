@@ -5,47 +5,109 @@ import { useDebounce, useToggle } from 'hooks';
 import { useApp } from 'providers/app';
 
 import { IoTrashOutline } from 'react-icons/io5';
-import { CgMoreO } from 'react-icons/cg';
 import { AiOutlineSearch } from 'react-icons/ai';
-import { Dropdown } from 'react-bootstrap';
+import { FILTER, ORDER } from 'configs';
+import styled from 'styled-components';
 
-const Aside = () => {
+const Aside = ({ renderBlur }) => {
   const { colors } = useTheme();
 
   const { loadingItems, currentItem, itemsList, loadItems, viewDetailsOf } =
     useApp();
 
+  /**
+   * Handle auto load items and search with filters
+   */
   const [hasLoaded, setHasLoaded] = useState(false);
 
   const [search, setSearch] = useState('');
 
+  const [filter, setFilter] = useState(FILTER.DATE);
+
+  const [filterOrder, setFilterOrder] = useState(ORDER.DESC);
+
+  const toggleFilter = (clickedFilter = '') => {
+    if (![FILTER.DATE, FILTER.NAME, FILTER.SIZE].includes(clickedFilter))
+      return;
+
+    if (filter === clickedFilter) {
+      // change order
+      setFilterOrder((old) => (old === ORDER.DESC ? ORDER.ASC : ORDER.DESC));
+    } else {
+      // set clicked filter
+      setFilter(clickedFilter);
+      setFilterOrder(ORDER.DESC);
+    }
+  };
+
   useDebounce(
     () => {
-      loadItems(search, !hasLoaded);
+      loadItems(search, filter, filterOrder, !hasLoaded);
       setHasLoaded(true);
     },
     500,
-    [search]
+    [search, filter, filterOrder]
   );
 
+  /**
+   * Handle selecting items for deletion
+   */
   const [selecting, setSelecting] = useToggle(false);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleSelection = () => {
+    setSelecting(!selecting);
+    setSelectedIds([]);
+  };
+
+  const handleSelectItem = (itemId = '', status = false) => {
+    if (status) {
+      // status is true if in selected id array
+      setSelectedIds((old) => old.filter((id) => id !== itemId));
+    } else {
+      setSelectedIds((old) => [...old, itemId]);
+    }
+  };
+
+  const handleToogleSelectAll = (status = false) => {
+    if (status) {
+      // status is true if next move is to select all
+      setSelectedIds(itemsList.map((el) => el?.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
   return (
-    <View background={colors?.card} className="ezen-aside">
+    <View
+      background={colors?.card}
+      className="ezen-aside"
+      style={renderBlur ? { filter: 'blur(3px)' } : {}}
+    >
       <View className="w-100 d-flex align-items-center justify-content-between my-2 p-4">
         <Text color={colors?.principal} size={20} font={AppFonts.PACIFICO}>
           yt-Downloader
         </Text>
         <div className="d-flex align-items-end justify-content-end">
-          <IoTrashOutline
-            color={colors?.red}
-            size={20}
-            className="cursor-pointer me-3"
+          {selecting && selectedIds.length > 0 && (
+            <IoTrashOutline
+              color={colors?.red}
+              size={20}
+              className="cursor-pointer me-3"
+            />
+          )}
+          <MoreButton
+            selecting={selecting}
+            onToggleSelect={handleSelection}
+            color={colors?.principal}
+            activeFilter={filter}
+            activeOrder={filterOrder}
+            onClickFilter={toggleFilter}
           />
-          <MoreButton color={colors?.principal} />
         </div>
       </View>
-      <div className="px-3 d-flex flex-column">
+      <div className="px-3 d-flex flex-column w-100">
         <Input
           containerClassName="mt-3"
           placeholder="Search..."
@@ -55,35 +117,74 @@ const Aside = () => {
             <AiOutlineSearch size={17} color={colors?.text} className="mx-2" />
           }
         />
-        <div className="my-4">
+        <View height="30px" className="my-3 w-100 d-flex align-items-center">
           {selecting && (
             <Checkbox
               size={16}
               color={colors?.principal}
               style={{ marginLeft: '15px' }}
-              checked={selecting}
-              onChange={setSelecting}
+              checked={selectedIds.length === itemsList.length}
+              onChange={handleToogleSelectAll}
             />
           )}
-        </div>
+        </View>
+      </div>
+      <ListWrapper
+        className="px-3 pb-5 w-100 d-flex flex-column"
+        indicatorForeground={colors.text}
+        indicatorBackground={colors.background}
+      >
         {loadingItems ? (
           <Text className="w-100 text-center my-5">Loading...</Text>
         ) : Array.isArray(itemsList) && itemsList.length > 0 ? (
-          itemsList.map((item) => (
-            <Item
-              key={item.id}
-              item={item}
-              isActive={item.id === currentItem?.id}
-              isSelectable={selecting}
-              onClick={() => viewDetailsOf(item)}
-            />
-          ))
+          itemsList.map((item) => {
+            const isChecked = selectedIds.includes(item?.id);
+
+            return (
+              <Item
+                key={item.id}
+                item={item}
+                isActive={item.id === currentItem?.id}
+                isSelected={isChecked}
+                isSelectable={selecting}
+                onClick={() => viewDetailsOf(item)}
+                onSelect={() => handleSelectItem(item?.id, isChecked)}
+              />
+            );
+          })
         ) : (
           <Text className="w-100 text-center my-5">No data available</Text>
         )}
-      </div>
+      </ListWrapper>
     </View>
   );
 };
 
 export default Aside;
+
+const ListWrapper = styled.div`
+  width: 100%;
+  height: calc(100vh - 250px);
+  overflow: auto;
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+    border: 0px;
+  }
+  ::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px
+      ${({ indicatorBackground }) => indicatorBackground || '#ddd'};
+    border-radius: 15px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: ${({ indicatorForeground }) =>
+      indicatorForeground || '#aaaaaa'}55;
+    border-radius: 15px;
+  }
+  ::-webkit-scrollbar-corner {
+    display: none;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+`;

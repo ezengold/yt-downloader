@@ -14,11 +14,16 @@ const Item = (props: ItemProps) => {
     <Wrapper
       className={`d-flex align-items-center ${props.isActive ? 'active' : ''}`}
       isSelectable={props.isSelectable ? '1' : '0'}
-      onClick={props.onClick}
+      onClick={props.isSelectable ? props.onSelect : props.onClick}
       hoverColor={colors.second}
     >
       <div className="selectable">
-        <Checkbox size={16} color={colors.principal} />
+        <Checkbox
+          checked={props.isSelected}
+          onChange={props.onSelect}
+          size={16}
+          color={colors.principal}
+        />
       </div>
       <Image
         src={props.item.img}
