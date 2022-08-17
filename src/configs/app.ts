@@ -11,3 +11,9 @@ export const ORDER = {
   ASC: 'ASC',
   DESC: 'DESC',
 };
+
+// app modal keys
+export const MODALS = {
+  CONFIRM_DELETE: 'CONFIRM_DELETE',
+  SETTINGS: 'SETTINGS',
+};

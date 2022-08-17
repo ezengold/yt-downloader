@@ -13,6 +13,12 @@ export interface ThemeType {
   };
   scheme: 'light' | 'dark' | string;
   toggleScheme: (toScheme?: string) => void;
+  resetDefaults: () => void;
+  updateColor: (
+    themeScheme: string,
+    colorName: string,
+    colorValue: string
+  ) => void;
 }
 
 export interface TextProps {
@@ -65,6 +71,17 @@ export interface CheckboxProps {
   InactiveIcon?: React.ReactNode;
 }
 
+export interface SwithThemeProps {
+  scheme?: string;
+  onChange?: (scheme: string) => void;
+  color?: string;
+  className?: string;
+  style?: object;
+  height?: string | number;
+  width?: string | number;
+  radius?: string;
+}
+
 export interface ProgressBarProps {
   /**
    * Between 0 - 100
@@ -96,6 +113,27 @@ export interface InputProps {
   type?: string;
   placeholder?: string;
   onChange?: (event: any) => void;
+}
+
+export interface FilePathInputProps {
+  height?: string | number;
+  width?: string | number;
+  radius?: string;
+  color?: string;
+  path?: string;
+  placeholder?: string;
+  onChange?: (path: string) => void;
+  className?: string;
+}
+
+export interface ColorInputProps {
+  label?: string;
+  height?: string | number;
+  width?: string | number;
+  radius?: string;
+  color?: string;
+  onChange?: (color: string) => void;
+  className?: string;
 }
 
 export interface SizeUnit {
@@ -152,8 +190,9 @@ export interface ItemProps {
 }
 
 export interface PresentModalProps {
-  Component: () => JSX.Element;
-  onHide: (...args: any[]) => void;
+  modalKey: string;
+  modalProps?: object;
+  onHide?: (...args: any[]) => void;
 }
 
 export interface AppType {
@@ -167,10 +206,15 @@ export interface AppType {
     verbose?: boolean
   ) => Promise<void>;
   viewDetailsOf: (item: DownloadItem) => void;
+
+  /**
+   * Handle global modal
+   */
   modalShown?: boolean;
   presentModal: (props: PresentModalProps) => void;
   closeModal: (...args: any[]) => void;
-  ModalComponent: () => JSX.Element;
+  modalKey: string;
+  modalProps: object;
 }
 
 export interface MoreButtonProps {

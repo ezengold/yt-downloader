@@ -3,11 +3,12 @@ import { useTheme, AppFonts } from 'providers/theme';
 import { ViewProps } from 'types';
 import _ from 'lodash';
 
-const View = (props: ViewProps) => {
+const View = React.forwardRef((props: ViewProps, ref) => {
   const { colors } = useTheme();
 
   return (
     <div
+      ref={ref}
       style={{
         color: props.color || colors?.text,
         backgroundColor: props.background || 'transparent',
@@ -34,6 +35,6 @@ const View = (props: ViewProps) => {
       {props.children}
     </div>
   );
-};
+});
 
 export default View;

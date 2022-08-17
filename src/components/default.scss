@@ -127,6 +127,10 @@ a {
   }
 }
 
+.fadeInAnim {
+  animation: fadeIn 0.2s;
+}
+
 .ezen {
   &-container {
     width: 100vw;
@@ -162,17 +166,25 @@ a {
     align-items: flex-start;
     justify-content: flex-start;
     overflow: hidden;
-    transition: filter 0.5s linear;
+
+    &.overlayed {
+      filter: blur(3px);
+    }
   }
 
   &-content {
     height: calc(100vh - 40px);
     width: calc(100% - 420px);
     animation: fadeIn 0.5s;
+
+    &.overlayed {
+      filter: blur(3px);
+    }
   }
 
   &-modal {
-    transition: all 0.2s ease-in-out;
+    z-index: 2000;
+    cursor: default;
 
     &-wrapper {
       position: absolute;
@@ -181,7 +193,11 @@ a {
       height: 100vh;
       width: 100vw;
       z-index: 10000;
-      // transition: filter 0.5s linear, background 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      animation: fadeIn 0.01s;
     }
   }
 

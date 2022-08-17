@@ -7,10 +7,13 @@ import styled from 'styled-components';
 import { useClickOutside, useToggle } from 'hooks';
 import { BsFilter } from 'react-icons/bs';
 import { AiOutlineSetting } from 'react-icons/ai';
-import { FILTER, ORDER } from 'configs';
+import { FILTER, MODALS, ORDER } from 'configs';
+import { useApp } from 'providers/app';
 
 const MoreButton = (props: MoreButtonProps) => {
   const { colors } = useTheme();
+
+  const { presentModal } = useApp();
 
   const ref = React.useRef();
 
@@ -31,6 +34,12 @@ const MoreButton = (props: MoreButtonProps) => {
   };
 
   // settings
+  const pushSettings = () => {
+    setShow(false);
+    presentModal({
+      modalKey: MODALS.SETTINGS,
+    });
+  };
 
   return (
     <div ref={ref}>
@@ -51,6 +60,7 @@ const MoreButton = (props: MoreButtonProps) => {
           <>
             <MenuItem
               indicatorColor={colors.second}
+              borderBottom={`2px solid ${colors.text}1A`}
               hoverColor={colors.text}
               onClick={toggleSelect}
             >
@@ -64,6 +74,7 @@ const MoreButton = (props: MoreButtonProps) => {
               hoverColor={colors.text}
               indicatorColor={colors.second}
               onClick={() => toggleFilter(FILTER.NAME)}
+              borderBottom={`1px solid ${colors.text}1A`}
             >
               {props?.activeFilter === FILTER.NAME && (
                 <div className="indicator" />
@@ -83,6 +94,7 @@ const MoreButton = (props: MoreButtonProps) => {
               hoverColor={colors.text}
               indicatorColor={colors.second}
               onClick={() => toggleFilter(FILTER.DATE)}
+              borderBottom={`1px solid ${colors.text}1A`}
             >
               {props?.activeFilter === FILTER.DATE && (
                 <div className="indicator" />
@@ -102,6 +114,7 @@ const MoreButton = (props: MoreButtonProps) => {
               hoverColor={colors.text}
               indicatorColor={colors.second}
               onClick={() => toggleFilter(FILTER.SIZE)}
+              borderBottom={`2px solid ${colors.text}1A`}
             >
               {props?.activeFilter === FILTER.SIZE && (
                 <div className="indicator" />
@@ -117,7 +130,7 @@ const MoreButton = (props: MoreButtonProps) => {
                 })`}
               />
             </MenuItem>
-            <MenuItem hoverColor={colors.text}>
+            <MenuItem hoverColor={colors.text} onClick={pushSettings}>
               <Text color={colors.text}>Settings</Text>
               <AiOutlineSetting color={colors.text} />
             </MenuItem>
@@ -139,6 +152,7 @@ const MenuItem = styled.div`
   padding: 0 15px 0 20px;
   position: relative;
   cursor: pointer;
+  border-bottom: ${({ borderBottom }) => borderBottom || '0px solid #0000'};
   &:hover {
     background-color: ${({ hoverColor }) => hoverColor || '#000000'}0d;
   }

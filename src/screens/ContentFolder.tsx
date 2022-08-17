@@ -12,13 +12,17 @@ import {
   RUNNING_STATUS,
 } from 'configs';
 
-const ContentFolder = () => {
+const ContentFolder = ({ overlayed }) => {
   const { colors } = useTheme();
 
   const { currentItem } = useApp();
 
   return (
-    <View className="ezen-content d-flex flex-column position-relative">
+    <View
+      className={`ezen-content ${
+        overlayed ? 'overlayed' : ''
+      } d-flex flex-column position-relative`}
+    >
       <Image
         src={currentItem?.img}
         height="150px"
@@ -79,82 +83,86 @@ const ContentFolder = () => {
           className="px-2"
         >
           <table>
-            <tr>
-              <th
-                style={{
-                  width: '50px',
-                  borderRadius: '5px 0 0 5px',
-                }}
-              >
-                <Checkbox size={15} color="white" />
-              </th>
-              <th>Insight</th>
-              <th className="text-start">Name</th>
-              <th className="text-start">Speed</th>
-              <th className="text-start">Status</th>
-              <th
-                style={{
-                  borderRadius: '0 5px 5px 0',
-                }}
-              >
-                Size
-              </th>
-            </tr>
-            {currentItem?.items?.map((item) => {
-              return (
-                <tr key={item?.id}>
-                  <td
-                    style={{
-                      width: '50px',
-                      borderRadius: '5px 0 0 5px',
-                    }}
-                  >
-                    <Checkbox size={15} color={colors.principal} />
-                  </td>
-                  <td>
-                    <Image
-                      src={item?.img}
-                      height="40px"
-                      width="40px"
-                      radius="5px"
-                      resizeMode="cover"
-                    />
-                  </td>
-                  <td className="text-start">{item?.title}</td>
-                  <td className="text-start">{`${item?.speed?.value} ${item?.speed?.unit?.title}`}</td>
-                  <td className="text-start">
-                    {item?.status === RUNNING_STATUS ? (
-                      <ProgressBar
-                        progress={20}
-                        width="150px"
-                        background="transparent"
-                        foreground={colors.principal}
+            <thead>
+              <tr>
+                <th
+                  style={{
+                    width: '50px',
+                    borderRadius: '5px 0 0 5px',
+                  }}
+                >
+                  <Checkbox size={15} color="white" />
+                </th>
+                <th>Insight</th>
+                <th className="text-start">Name</th>
+                <th className="text-start">Speed</th>
+                <th className="text-start">Status</th>
+                <th
+                  style={{
+                    borderRadius: '0 5px 5px 0',
+                  }}
+                >
+                  Size
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItem?.items?.map((item) => {
+                return (
+                  <tr key={item?.id}>
+                    <td
+                      style={{
+                        width: '50px',
+                        borderRadius: '5px 0 0 5px',
+                      }}
+                    >
+                      <Checkbox size={15} color={colors.principal} />
+                    </td>
+                    <td>
+                      <Image
+                        src={item?.img}
+                        height="40px"
+                        width="40px"
                         radius="5px"
+                        resizeMode="cover"
                       />
-                    ) : item?.status === CANCELED_STATUS ? (
-                      <Text color={colors.red}>{item?.error}</Text>
-                    ) : (
-                      <Text
-                        color={
-                          item?.status === PENDING_STATUS
-                            ? colors.yellow
-                            : item?.status === COMPLETED_STATUS
-                            ? colors.green
-                            : colors.text
-                        }
-                      >
-                        {item?.status}
-                      </Text>
-                    )}
-                  </td>
-                  <td
-                    style={{
-                      borderRadius: '0 5px 5px 0',
-                    }}
-                  >{`${item?.size?.value} ${item?.size?.unit?.title}`}</td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td className="text-start">{item?.title}</td>
+                    <td className="text-start">{`${item?.speed?.value} ${item?.speed?.unit?.title}`}</td>
+                    <td className="text-start">
+                      {item?.status === RUNNING_STATUS ? (
+                        <ProgressBar
+                          progress={20}
+                          width="150px"
+                          background="transparent"
+                          foreground={colors.principal}
+                          radius="5px"
+                        />
+                      ) : item?.status === CANCELED_STATUS ? (
+                        <Text color={colors.red}>{item?.error}</Text>
+                      ) : (
+                        <Text
+                          color={
+                            item?.status === PENDING_STATUS
+                              ? colors.yellow
+                              : item?.status === COMPLETED_STATUS
+                              ? colors.green
+                              : colors.text
+                          }
+                        >
+                          {item?.status}
+                        </Text>
+                      )}
+                    </td>
+                    <td
+                      style={{
+                        borderRadius: '0 5px 5px 0',
+                      }}
+                    >{`${item?.size?.value} ${item?.size?.unit?.title}`}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
           </table>
         </TableWrapper>
       </View>

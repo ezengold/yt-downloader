@@ -6,3 +6,4 @@ export * from './item';
 export * from './progress';
 export * from './checkbox';
 export * from './button';
+export * from './modals';

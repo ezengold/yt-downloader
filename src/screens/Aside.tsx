@@ -6,14 +6,20 @@ import { useApp } from 'providers/app';
 
 import { IoTrashOutline } from 'react-icons/io5';
 import { AiOutlineSearch } from 'react-icons/ai';
-import { FILTER, ORDER } from 'configs';
+import { FILTER, MODALS, ORDER } from 'configs';
 import styled from 'styled-components';
 
-const Aside = ({ renderBlur }) => {
+const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
 
-  const { loadingItems, currentItem, itemsList, loadItems, viewDetailsOf } =
-    useApp();
+  const {
+    loadingItems,
+    currentItem,
+    itemsList,
+    loadItems,
+    viewDetailsOf,
+    presentModal,
+  } = useApp();
 
   /**
    * Handle auto load items and search with filters
@@ -79,11 +85,23 @@ const Aside = ({ renderBlur }) => {
     }
   };
 
+  const handleDeleteItems = () => {
+    presentModal({
+      modalKey: MODALS.CONFIRM_DELETE,
+      modalProps: {
+        title: 'Warning !',
+        message: 'Do you really want to delete the selected items ?',
+      },
+      onHide: (status) => {
+        handleSelection();
+      },
+    });
+  };
+
   return (
     <View
       background={colors?.card}
-      className="ezen-aside"
-      style={renderBlur ? { filter: 'blur(3px)' } : {}}
+      className={`ezen-aside ${overlayed ? 'overlayed' : ''}`}
     >
       <View className="w-100 d-flex align-items-center justify-content-between my-2 p-4">
         <Text color={colors?.principal} size={20} font={AppFonts.PACIFICO}>
@@ -95,6 +113,7 @@ const Aside = ({ renderBlur }) => {
               color={colors?.red}
               size={20}
               className="cursor-pointer me-3"
+              onClick={handleDeleteItems}
             />
           )}
           <MoreButton

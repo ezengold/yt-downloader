@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { AppType, DownloadItem, PresentModalProps } from 'types';
 import { DOWNLOAD_ITEMS_LIST } from 'dataset';
 import { FILTER, ORDER } from 'configs';
-import { EmptyView } from 'components';
 
 const AppContext = React.createContext<AppType>({});
 
@@ -45,12 +44,16 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
   // First element hold on hide callback provided
   const [modalCallbacks, setModalCallbacks] = useState<Function[]>([() => {}]);
 
-  // Component of the modal
-  const [ModalComponent, setModalComponent] = useState(EmptyView);
+  // key of the current modal
+  const [modalKey, setModalKey] = useState('');
+
+  // props of the current modal
+  const [modalProps, setModalProps] = useState<object>({});
 
   const handleShowModal = (props: PresentModalProps) => {
     setModalShown(true);
-    setModalComponent(props.Component);
+    setModalKey(props.modalKey);
+    setModalProps(props.modalProps);
     setModalCallbacks([
       typeof props.onHide === 'function' ? props.onHide : () => {},
     ]);
@@ -58,8 +61,9 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleCloseModal = (...args: any[]) => {
     setModalShown(false);
-    setModalComponent(EmptyView);
-    if (typeof modalCallbacks[0] === 'function') modalCallbacks[0](args);
+    setModalKey('');
+    setModalProps({});
+    if (typeof modalCallbacks[0] === 'function') modalCallbacks[0](...args);
     setModalCallbacks([() => {}]);
   };
 
@@ -76,7 +80,8 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
         modalShown,
         presentModal: handleShowModal,
         closeModal: handleCloseModal,
-        ModalComponent,
+        modalKey,
+        modalProps,
       }}
     >
       {children}

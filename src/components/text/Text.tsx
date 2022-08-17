@@ -7,7 +7,7 @@ const Text = (props: TextProps) => {
   const { colors } = useTheme();
 
   return (
-    <span
+    <div
       style={{
         color: props.color || colors?.text,
         fontSize: props.size || 14,
@@ -19,7 +19,7 @@ const Text = (props: TextProps) => {
       {..._.omit(props, ['color', 'size', 'font', 'style', 'width', 'height'])}
     >
       {props.children}
-    </span>
+    </div>
   );
 };
 
