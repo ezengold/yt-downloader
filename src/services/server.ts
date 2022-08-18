@@ -4,7 +4,9 @@ export class MainServer {
   server: ChildProcessWithoutNullStreams | undefined;
 
   bootstrap(): void {
-    const serverInstance = spawn('python3', [`${__dirname}/server.py`]);
+    const serverInstance = spawn(`${__dirname}/cmd.sh`, [
+      `${__dirname}/server.py`,
+    ]);
 
     this.server = serverInstance;
 
