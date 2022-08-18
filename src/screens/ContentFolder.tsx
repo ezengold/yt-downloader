@@ -52,8 +52,8 @@ const ContentFolder = ({ overlayed }) => {
               {currentItem?.title}
             </Text>
             <Text size="25px" font={AppFonts.SEMIBOLD} className="mt-2">
-              {currentItem?.currentSpeed?.value}{' '}
-              {currentItem?.currentSpeed?.unit?.title}
+              {currentItem?.currentSpeed?.toPreferredSpeed()?.value}{' '}
+              {currentItem?.currentSpeed?.toPreferredSpeed()?.unit?.title}
             </Text>
           </div>
           <div className="d-flex align-items-center justify-content-end">
@@ -128,7 +128,9 @@ const ContentFolder = ({ overlayed }) => {
                       />
                     </td>
                     <td className="text-start">{item?.title}</td>
-                    <td className="text-start">{`${item?.speed?.value} ${item?.speed?.unit?.title}`}</td>
+                    <td className="text-start">{`${
+                      item?.speed?.toPreferredSpeed()?.value
+                    } ${item?.speed?.toPreferredSpeed()?.unit?.title}`}</td>
                     <td className="text-start">
                       {item?.status === RUNNING_STATUS ? (
                         <ProgressBar
@@ -158,7 +160,9 @@ const ContentFolder = ({ overlayed }) => {
                       style={{
                         borderRadius: '0 5px 5px 0',
                       }}
-                    >{`${item?.size?.value} ${item?.size?.unit?.title}`}</td>
+                    >{`${item?.size?.toPreferredSize()?.value} ${
+                      item?.size?.toPreferredSize()?.unit?.title
+                    }`}</td>
                   </tr>
                 );
               })}

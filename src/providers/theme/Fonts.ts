@@ -1,7 +1,7 @@
 export const AppFonts = {
-  REGULAR: 'Exo',
-  MEDIUM: 'Exo-Medium',
-  SEMIBOLD: 'Exo-semiBold',
-  BOLD: 'Exo-Bold',
+  REGULAR: 'Mukta',
+  MEDIUM: 'Mukta-Medium',
+  SEMIBOLD: 'Mukta-semiBold',
+  BOLD: 'Mukta-Bold',
   PACIFICO: 'Pacifico',
 };

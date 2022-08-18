@@ -67,8 +67,8 @@ const Item = (props: ItemProps) => {
               Size :{' '}
             </Text>
             <Text color={colors.principal} size={12} font={AppFonts.BOLD}>
-              {props.item?.totalSize?.value}{' '}
-              {props.item?.totalSize?.unit?.title}
+              {props.item?.totalSize?.toPreferredSize()?.value}{' '}
+              {props.item?.totalSize?.toPreferredSize()?.unit?.title}
             </Text>
           </div>
           <Text size={12}>Added at : {props.item?.addedAt}</Text>

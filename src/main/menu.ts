@@ -53,30 +53,21 @@ export default class MenuBuilder {
   }
 
   buildDarwinTemplate(): MenuItemConstructorOptions[] {
-    const subMenuAbout: DarwinMenuItemConstructorOptions = {
-      label: 'Electron',
+    const subMenuMain: DarwinMenuItemConstructorOptions = {
+      label: 'yt-Downloader',
       submenu: [
         {
-          label: 'About ElectronReact',
-          selector: 'orderFrontStandardAboutPanel:',
-        },
-        { type: 'separator' },
-        { label: 'Services', submenu: [] },
-        { type: 'separator' },
-        {
-          label: 'Hide ElectronReact',
-          accelerator: 'Command+H',
-          selector: 'hide:',
+          label: 'New download',
+          accelerator: 'Command+Plus',
+          click: () => app.emit('openNewDownload'),
         },
         {
-          label: 'Hide Others',
-          accelerator: 'Command+Shift+H',
-          selector: 'hideOtherApplications:',
+          label: 'Settings',
+          click: () => app.emit('openSettings'),
         },
-        { label: 'Show All', selector: 'unhideAllApplications:' },
         { type: 'separator' },
         {
-          label: 'Quit',
+          label: 'Quit yt-Downloader',
           accelerator: 'Command+Q',
           click: () => {
             app.quit();
@@ -100,8 +91,25 @@ export default class MenuBuilder {
         },
       ],
     };
-    const subMenuViewDev: MenuItemConstructorOptions = {
-      label: 'View',
+    const subMenuAbout: MenuItemConstructorOptions = {
+      label: 'About',
+      submenu: [
+        {
+          label: 'About',
+          click: () => app.emit('openAbout'),
+        },
+        {
+          label: 'Visit us',
+          click() {
+            shell.openExternal(
+              'https://github.com/EZENGOLD/yt-downloader#readme'
+            );
+          },
+        },
+      ],
+    };
+    const subMenuView: MenuItemConstructorOptions = {
+      label: 'Developer',
       submenu: [
         {
           label: 'Reload',
@@ -126,80 +134,31 @@ export default class MenuBuilder {
         },
       ],
     };
-    const subMenuViewProd: MenuItemConstructorOptions = {
-      label: 'View',
-      submenu: [
-        {
-          label: 'Toggle Full Screen',
-          accelerator: 'Ctrl+Command+F',
-          click: () => {
-            this.mainWindow.setFullScreen(!this.mainWindow.isFullScreen());
-          },
-        },
-      ],
-    };
-    const subMenuWindow: DarwinMenuItemConstructorOptions = {
-      label: 'Window',
-      submenu: [
-        {
-          label: 'Minimize',
-          accelerator: 'Command+M',
-          selector: 'performMiniaturize:',
-        },
-        { label: 'Close', accelerator: 'Command+W', selector: 'performClose:' },
-        { type: 'separator' },
-        { label: 'Bring All to Front', selector: 'arrangeInFront:' },
-      ],
-    };
-    const subMenuHelp: MenuItemConstructorOptions = {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'Learn More',
-          click() {
-            shell.openExternal('https://electronjs.org');
-          },
-        },
-        {
-          label: 'Documentation',
-          click() {
-            shell.openExternal(
-              'https://github.com/electron/electron/tree/main/docs#readme'
-            );
-          },
-        },
-        {
-          label: 'Community Discussions',
-          click() {
-            shell.openExternal('https://www.electronjs.org/community');
-          },
-        },
-        {
-          label: 'Search Issues',
-          click() {
-            shell.openExternal('https://github.com/electron/electron/issues');
-          },
-        },
-      ],
-    };
 
-    const subMenuView =
-      process.env.NODE_ENV === 'development' ||
+    return [
+      subMenuMain,
+      subMenuEdit,
+      subMenuAbout,
+      ...(process.env.NODE_ENV === 'development' ||
       process.env.DEBUG_PROD === 'true'
-        ? subMenuViewDev
-        : subMenuViewProd;
-
-    return [subMenuAbout, subMenuEdit, subMenuView, subMenuWindow, subMenuHelp];
+        ? [subMenuView]
+        : []),
+    ];
   }
 
   buildDefaultTemplate() {
     const templateDefault = [
       {
-        label: '&File',
+        label: '&yt-Downloader',
         submenu: [
           {
-            label: '&Open',
-            accelerator: 'Ctrl+O',
+            label: 'New download',
+            accelerator: 'Ctrl+N',
+            click: () => app.emit('openNewDownload'),
+          },
+          {
+            label: 'Settings',
+            click: () => app.emit('openSettings'),
           },
           {
             label: '&Close',
@@ -211,80 +170,55 @@ export default class MenuBuilder {
         ],
       },
       {
-        label: '&View',
-        submenu:
-          process.env.NODE_ENV === 'development' ||
-          process.env.DEBUG_PROD === 'true'
-            ? [
-                {
-                  label: '&Reload',
-                  accelerator: 'Ctrl+R',
-                  click: () => {
-                    this.mainWindow.webContents.reload();
-                  },
-                },
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  },
-                },
-                {
-                  label: 'Toggle &Developer Tools',
-                  accelerator: 'Alt+Ctrl+I',
-                  click: () => {
-                    this.mainWindow.webContents.toggleDevTools();
-                  },
-                },
-              ]
-            : [
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  },
-                },
-              ],
-      },
-      {
-        label: 'Help',
+        label: 'About',
         submenu: [
           {
-            label: 'Learn More',
-            click() {
-              shell.openExternal('https://electronjs.org');
-            },
+            label: 'About',
+            click: () => app.emit('openAbout'),
           },
           {
-            label: 'Documentation',
+            label: 'Visit us',
             click() {
               shell.openExternal(
-                'https://github.com/electron/electron/tree/main/docs#readme'
+                'https://github.com/EZENGOLD/yt-downloader#readme'
               );
-            },
-          },
-          {
-            label: 'Community Discussions',
-            click() {
-              shell.openExternal('https://www.electronjs.org/community');
-            },
-          },
-          {
-            label: 'Search Issues',
-            click() {
-              shell.openExternal('https://github.com/electron/electron/issues');
             },
           },
         ],
       },
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+        ? {
+            label: 'Developer',
+            submenu: [
+              {
+                label: '&Reload',
+                accelerator: 'Ctrl+R',
+                click: () => {
+                  this.mainWindow.webContents.reload();
+                },
+              },
+              {
+                label: 'Toggle &Full Screen',
+                accelerator: 'F11',
+                click: () => {
+                  this.mainWindow.setFullScreen(
+                    !this.mainWindow.isFullScreen()
+                  );
+                },
+              },
+              {
+                label: 'Toggle &Developer Tools',
+                accelerator: 'Alt+Ctrl+I',
+                click: () => {
+                  this.mainWindow.webContents.toggleDevTools();
+                },
+              },
+            ],
+          }
+        : null,
     ];
 
-    return templateDefault;
+    return templateDefault.filter((el) => !!el);
   }
 }

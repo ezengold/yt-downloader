@@ -16,4 +16,5 @@ export const ORDER = {
 export const MODALS = {
   CONFIRM_DELETE: 'CONFIRM_DELETE',
   SETTINGS: 'SETTINGS',
+  NEW_DOWNLOAD: 'NEW_DOWNLOAD',
 };

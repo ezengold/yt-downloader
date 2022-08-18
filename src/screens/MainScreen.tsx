@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, ConfirmDelete, SettingsModal } from 'components';
+import React, { useEffect } from 'react';
+import { View, ConfirmDelete, SettingsModal, NewDownload } from 'components';
 import { useApp } from 'providers/app';
 import { useTheme } from 'providers/theme';
 import { MODALS } from 'configs';
@@ -11,12 +11,46 @@ import ContentFolder from './ContentFolder';
 const AppModals = {
   [MODALS.CONFIRM_DELETE]: ConfirmDelete,
   [MODALS.SETTINGS]: SettingsModal,
+  [MODALS.NEW_DOWNLOAD]: NewDownload,
 };
 
 const MainScreen = () => {
   const { colors } = useTheme();
 
-  const { currentItem, modalShown, modalKey, modalProps } = useApp();
+  const { currentItem, modalShown, modalKey, modalProps, presentModal } =
+    useApp();
+
+  const openSettings = () => {
+    presentModal({ modalKey: MODALS.SETTINGS });
+  };
+
+  const openAbout = () => {
+    presentModal({
+      modalKey: MODALS.SETTINGS,
+      modalProps: { defaultIndex: 2 },
+    });
+  };
+
+  const openNewDownload = () => {
+    presentModal({ modalKey: MODALS.NEW_DOWNLOAD });
+  };
+
+  useEffect(() => {
+    window.electron.ipcRenderer.on('openSettings', openSettings);
+    window.electron.ipcRenderer.on('openAbout', openAbout);
+    window.electron.ipcRenderer.on('openNewDownload', openNewDownload);
+    return () => {
+      window.electron.ipcRenderer?.removeListener?.(
+        'openSettings',
+        openSettings
+      );
+      window.electron.ipcRenderer?.removeListener?.('openAbout', openAbout);
+      window.electron.ipcRenderer?.removeListener?.(
+        'openNewDownload',
+        openNewDownload
+      );
+    };
+  }, []);
 
   return (
     <View background={colors.background} className="ezen-container">

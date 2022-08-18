@@ -1,4 +1,5 @@
 import React from 'react';
+import { DownloadItem, DownloadSubItem, ItemSize, ItemSpeed } from 'models';
 
 export interface ThemeType {
   colors: {
@@ -44,6 +45,7 @@ export interface ViewProps {
   className?: string;
   style?: object;
   children?: React.ReactNode;
+  onClick: () => void;
 }
 
 export interface ImageProps {
@@ -136,36 +138,18 @@ export interface ColorInputProps {
   className?: string;
 }
 
-export interface SizeUnit {
-  title: string;
-
-  /**
-   * ratio * item size gives equivalent in default SizeUnit.
-   * The default SizeUnit has a ratio of 1
-   */
-  ratio: number;
-}
-
-export interface ItemSize {
-  value: number;
-  unit: SizeUnit;
-}
-
-export type SpeedUnit = SizeUnit;
-export type ItemSpeed = ItemSize;
-
-export interface SubItem {
+export interface DownloadSubItemParams {
   id: string;
   title: string;
-  img?: string | undefined;
-  size?: ItemSize;
-  currentSize?: ItemSize;
+  img: string | undefined;
+  size: ItemSize;
+  currentSize: ItemSize;
   speed?: ItemSpeed;
-  status?: string;
+  status: string;
   error?: string;
 }
 
-export interface DownloadItem {
+export interface DownloadItemParams {
   id: string;
   title: string;
   img?: string | undefined;
@@ -174,7 +158,7 @@ export interface DownloadItem {
   currentSpeed?: ItemSpeed;
   addedAt?: string;
   status?: string;
-  items: SubItem[];
+  items: DownloadSubItem[];
   error?: string;
 }
 

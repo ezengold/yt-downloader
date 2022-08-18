@@ -17,6 +17,7 @@ module.exports = {
     'import/no-named-as-default-member': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
+    'no-else-return': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

@@ -13,23 +13,23 @@ $theme-colors: ("principal", $color-principal), ("second", $color-second), ("yel
 $theme-sizes: "sm", "md", "lg";
 
 @font-face {
-  font-family: "Exo";
-  src: local("Exo"), url(../../assets/fonts/Exo/Exo2-Regular.ttf) format("truetype");
+  font-family: "Mukta";
+  src: local("Mukta"), url(../../assets/fonts/Mukta/Mukta-Regular.ttf) format("truetype");
 }
 
 @font-face {
-  font-family: "Exo-Medium";
-  src: local("Exo-Medium"), url(../../assets/fonts/Exo/Exo2-Medium.ttf) format("truetype");
+  font-family: "Mukta-Medium";
+  src: local("Exo-Medium"), url(../../assets/fonts/Mukta/Mukta-Medium.ttf) format("truetype");
 }
 
 @font-face {
-  font-family: "Exo-SemiBold";
-  src: local("Exo-SemiBold"), url(../../assets/fonts/Exo/Exo2-SemiBold.ttf) format("truetype");
+  font-family: "Mukta-SemiBold";
+  src: local("Exo-SemiBold"), url(../../assets/fonts/Mukta/Mukta-SemiBold.ttf) format("truetype");
 }
 
 @font-face {
-  font-family: "Exo-Bold";
-  src: local("Exo-Bold"), url(../../assets/fonts/Exo/Exo2-Bold.ttf) format("truetype");
+  font-family: "Mukta-Bold";
+  src: local("Mukta-Bold"), url(../../assets/fonts/Mukta/Mukta-Bold.ttf) format("truetype");
 }
 
 @font-face {

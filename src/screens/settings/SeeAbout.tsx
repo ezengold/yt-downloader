@@ -7,7 +7,7 @@ const SeeAbout = () => {
   const { colors } = useTheme();
 
   return (
-    <View className="fadeInAnim d-flex flex-column align-items-center justify-content-center pt-5">
+    <View className="fadeInAnim d-flex flex-column align-items-center justify-content-center pt-4">
       <Image
         src={AppIcon}
         height="150px"
@@ -19,7 +19,11 @@ const SeeAbout = () => {
       <Text font={AppFonts.BOLD} size="18px" className="text-center mt-5">
         #yt-dlp #electron #react
       </Text>
-      <Text font={AppFonts.SEMIBOLD} size="15px" className="text-center my-5">
+      <Text
+        font={AppFonts.SEMIBOLD}
+        size="15px"
+        className="text-center mt-5 mb-4"
+      >
         By ezen, © 2022
       </Text>
       <Text size="15px" className="text-center">

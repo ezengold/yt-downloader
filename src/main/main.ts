@@ -136,3 +136,12 @@ app
     });
   })
   .catch(console.log);
+
+/**
+ * Custom events
+ */
+app.on('openSettings', () => mainWindow?.webContents.send('openSettings'));
+app.on('openAbout', () => mainWindow?.webContents.send('openAbout'));
+app.on('openNewDownload', () =>
+  mainWindow?.webContents.send('openNewDownload')
+);

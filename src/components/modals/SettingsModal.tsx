@@ -6,7 +6,7 @@ import { useClickOutside } from 'hooks';
 import { SeeAbout, SetLocation, SetTheme } from 'screens/settings';
 import styled from 'styled-components';
 
-const SettingsModal = () => {
+const SettingsModal = (props: { defaultIndex?: number }) => {
   const ref = React.useRef();
 
   const { colors } = useTheme();
@@ -18,7 +18,7 @@ const SettingsModal = () => {
   // tabs
   const tabs = [<SetLocation />, <SetTheme />, <SeeAbout />];
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(props.defaultIndex || 0);
 
   return (
     <View

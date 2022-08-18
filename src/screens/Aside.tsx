@@ -8,6 +8,7 @@ import { IoTrashOutline } from 'react-icons/io5';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { FILTER, MODALS, ORDER } from 'configs';
 import styled from 'styled-components';
+import { BsPlusCircle } from 'react-icons/bs';
 
 const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
@@ -98,6 +99,15 @@ const Aside = ({ overlayed }) => {
     });
   };
 
+  /**
+   * Add new download item
+   */
+  const handleAddItem = () => {
+    presentModal({
+      modalKey: MODALS.NEW_DOWNLOAD,
+    });
+  };
+
   return (
     <View
       background={colors?.card}
@@ -108,6 +118,12 @@ const Aside = ({ overlayed }) => {
           yt-Downloader
         </Text>
         <div className="d-flex align-items-end justify-content-end">
+          <BsPlusCircle
+            color={colors?.principal}
+            size={20}
+            className="cursor-pointer me-3"
+            onClick={handleAddItem}
+          />
           {selecting && selectedIds.length > 0 && (
             <IoTrashOutline
               color={colors?.red}
