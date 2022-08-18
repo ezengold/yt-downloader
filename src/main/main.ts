@@ -12,8 +12,13 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { MainServer } from '../services/server';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+
+// start main server for handling downloads
+const server = new MainServer();
+server.bootstrap();
 
 class AppUpdater {
   constructor() {
@@ -116,7 +121,6 @@ const createWindow = async () => {
 /**
  * Add event listeners...
  */
-
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
@@ -141,7 +145,9 @@ app
  * Custom events
  */
 app.on('openSettings', () => mainWindow?.webContents.send('openSettings'));
+
 app.on('openAbout', () => mainWindow?.webContents.send('openAbout'));
+
 app.on('openNewDownload', () =>
   mainWindow?.webContents.send('openNewDownload')
 );

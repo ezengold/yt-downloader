@@ -18,6 +18,7 @@ module.exports = {
     '@typescript-eslint/no-use-before-define': 'off',
     'jsx-a11y/click-events-have-key-events': 'off',
     'no-else-return': 'off',
+    'class-methods-use-this': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

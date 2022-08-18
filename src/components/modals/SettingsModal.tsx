@@ -25,7 +25,7 @@ const SettingsModal = (props: { defaultIndex?: number }) => {
       ref={ref}
       className="ezen-modal p-4 rounded-25"
       width="60%"
-      height="70%"
+      height="75%"
       background={colors.card}
     >
       <View
