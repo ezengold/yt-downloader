@@ -1,4 +1,4 @@
-import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, exec } from 'child_process';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Channels, Message } from '../models';
 
@@ -13,7 +13,7 @@ export class MainServer {
 
   bootstrap(): void {
     this.createWebSocketServer();
-    // this.connectServer();
+    this.connectServer();
   }
 
   createWebSocketServer(): void {
@@ -35,6 +35,7 @@ export class MainServer {
             break;
 
           case Channels.PLAYLIST_CONTENTS:
+            // no need of real time :)
             break;
 
           case Channels.START_PAYLIST_DOWNLOAD:
@@ -73,37 +74,26 @@ export class MainServer {
   }
 
   connectServer() {
-    spawn(`python3 ${__dirname}/server.py`, []).on('error', (err) => {
-      console.log(`\n\nspawn error -> ${err?.message}\n\n`);
+    exec(`python3 ${__dirname}/server.py`, (error) => {
+      if (error) {
+        console.log(`\n\nspawn error -> ${error}\n\n`);
+      }
     });
   }
 
-  fetchPlaylistContent(link: string): string {
-    let output = '';
-
-    const serverInstance = spawn(`python3 ${__dirname}/server.py`, [
-      Channels.PLAYLIST_CONTENTS,
-      link,
-    ]).on('error', (err) => {
-      console.log(`\n\nspawn error -> ${err?.message}\n\n`);
-    });
-
-    if (serverInstance.pid) {
-      serverInstance.stdout.on('data', (data) => {
-        console.log(`\n\n${Channels.PLAYLIST_CONTENTS} stdout -> ${data}\n\n`);
-        output = data;
-      });
-
-      serverInstance.stderr.on('data', (data) => {
-        console.log(`\n\n${Channels.PLAYLIST_CONTENTS} error -> ${data}\n\n`);
-      });
-
-      serverInstance.on('close', (code) => {
-        console.log(
-          `\n\n${Channels.PLAYLIST_CONTENTS} child process exited with code ${code}\n\n`
-        );
-      });
-    }
-    return output;
+  fetchPlaylistContent(link: string, callback: (response: string) => void) {
+    exec(
+      `python3 ${__dirname}/server.py ${Channels.PLAYLIST_CONTENTS} ${link}`,
+      (error, stdout, stderr) => {
+        if (error || stderr) {
+          // console.log(
+          //   `\n${Channels.PLAYLIST_CONTENTS} error -> ${error} | ${stderr}\n`
+          // );
+          callback('');
+        } else {
+          callback(stdout);
+        }
+      }
+    );
   }
 }

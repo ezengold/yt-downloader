@@ -147,6 +147,7 @@ app.on('openNewDownload', () =>
 );
 
 ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
-  const reponse = server.fetchPlaylistContent(link);
-  event.reply(Channels.PLAYLIST_CONTENTS, reponse);
+  server.fetchPlaylistContent(link, (response) => {
+    event.reply(Channels.PLAYLIST_CONTENTS, response);
+  });
 });

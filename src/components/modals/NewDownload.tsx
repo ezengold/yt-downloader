@@ -25,8 +25,10 @@ const NewDownload = () => {
 
   useEffect(() => {
     document.addEventListener('keydown', closeOnEscape);
-    window.electron.ipcRenderer.on(Channels.PLAYLIST_CONTENTS, (...args) => {
-      console.log({ args });
+    window.electron.ipcRenderer.on(Channels.PLAYLIST_CONTENTS, (response) => {
+      console.log(JSON.parse(response));
+      setFetchingContents(false);
+      setItem(DOWNLOAD_ITEMS_LIST[0]);
     });
     return () => {
       document.removeEventListener('keydown', closeOnEscape);
@@ -52,12 +54,10 @@ const NewDownload = () => {
     ) {
       setFetchingContents(true);
       setTimeout(() => {
-        setFetchingContents(false);
         window.electron.ipcRenderer.sendMessage(Channels.PLAYLIST_CONTENTS, [
           link,
         ]);
-        // setItem(DOWNLOAD_ITEMS_LIST[0]);
-      }, 5000);
+      }, 2000);
     } else {
       setError('Invalid URL');
       setItem(null);
@@ -115,6 +115,7 @@ const NewDownload = () => {
             }
             value={link}
             onChange={onLinkChange}
+            autoFocus
           />
           <View
             className="ezen-btn h-100 rounded-0"

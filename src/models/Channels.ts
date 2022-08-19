@@ -30,4 +30,9 @@ export class Channels {
    * Download failed due to unexpected error
    */
   static PLAYLIST_DOWNLOAD_FAILED = 'PLAYLIST_DOWNLOAD_FAILED';
+
+  /**
+   * Built in ipc example
+   */
+  static IPC_EXAMPLE = 'ipc-example';
 }

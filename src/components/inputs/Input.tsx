@@ -1,6 +1,7 @@
 import React from 'react';
 import { InputProps } from 'types';
 import { AppFonts, useTheme } from 'providers/theme';
+import _ from 'lodash';
 
 const Input = (props: InputProps) => {
   const { colors } = useTheme();
@@ -32,6 +33,22 @@ const Input = (props: InputProps) => {
         value={props.value}
         placeholder={props.placeholder}
         onChange={props.onChange}
+        {..._.omit(props, [
+          'containerClassName',
+          'containerStyle',
+          'background',
+          'iconLeft',
+          'iconRight',
+          'className',
+          'color',
+          'size',
+          'font',
+          'style',
+          'value',
+          'name',
+          'placeholder',
+          'onChange',
+        ])}
       />
       {props.iconRight}
     </div>

@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import subprocess
 import websockets
@@ -14,14 +15,28 @@ PLAYLIST_PROGRESSION = "PLAYLIST_PROGRESSION"
 CANCEL_PAYLIST_DOWNLOAD = "CANCEL_PAYLIST_DOWNLOAD"
 PLAYLIST_DOWNLOAD_FAILED = "PLAYLIST_DOWNLOAD_FAILED"
 
+args = sys.argv
+
 
 async def connection():
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
             "topic": CONNECTION_SUCCEEDED,
-            "value": "Hello World !"
+            "value": "Connected successfully"
         }))
 
+
+async def get_playlist_contents():
+    playlist_link = args[2]
+    print(json.dumps({
+        "topic": PLAYLIST_CONTENTS,
+        "value": {
+            "title": "SwiftUI User Location on a Map MapKit & CoreLocation",
+            "url": playlist_link,
+            "size": 1265156313,
+            "items": []
+        }
+    }))
 
 # async def time(websocket, path):
 #     args = await websocket.recv()
@@ -35,4 +50,8 @@ async def connection():
 #             print(f"line = {line}")
 #             await websocket.send(line)
 
-asyncio.run(connection())
+if len(args) > 1:
+    if args[1] == PLAYLIST_CONTENTS:
+        asyncio.run(get_playlist_contents())
+else:
+    asyncio.run(connection())

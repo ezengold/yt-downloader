@@ -8,7 +8,7 @@ import { IoTrashOutline } from 'react-icons/io5';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { FILTER, MODALS, ORDER } from 'configs';
 import styled from 'styled-components';
-import { BsPlusCircle } from 'react-icons/bs';
+import { BsDot, BsPlusCircle } from 'react-icons/bs';
 
 const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
