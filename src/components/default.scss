@@ -201,6 +201,25 @@ a {
     }
   }
 
+  &-alert {
+    z-index: 30000;
+    cursor: default;
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    min-width: 0px;
+    max-width: 0px;
+    border-radius: 10px;
+    padding: 0px;
+
+    &.active {
+      padding: 15px;
+      min-width: 300px;
+      max-width: 400px;
+      animation: fadeInRight 0.5s;
+    }
+  }
+
   /* BUTTONS */
   &-btn {
     @mixin buttoner {

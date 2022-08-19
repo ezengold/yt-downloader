@@ -1,23 +1,21 @@
 {
-  "description": "A foundation for scalable desktop apps",
+  "description": "Youtube playlist downloader",
   "keywords": [
     "electron",
-    "boilerplate",
     "react",
     "typescript",
-    "ts",
-    "sass",
-    "webpack",
-    "hot",
-    "reload"
+    "youtube",
+    "playlist",
+    "download",
+    "yt-dlp&"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/EZENGOLD/yt-downloader#readme",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/EZENGOLD/yt-downloader/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/EZENGOLD/yt-downloader.git"
   },
   "license": "MIT",
   "author": {
@@ -26,9 +24,9 @@
   },
   "contributors": [
     {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
+      "name": "Spero Adonon",
+      "email": "spro.adonon96@gmail.com",
+      "url": "https://github.com/sproadn"
     }
   ],
   "main": "./src/main/main.ts",
@@ -111,6 +109,7 @@
     "bootstrap": "^5.2.0",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.7",
+    "electron-store": "^8.1.0",
     "electron-updater": "^5.0.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",

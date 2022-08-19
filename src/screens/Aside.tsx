@@ -3,24 +3,21 @@ import { Checkbox, Input, Item, MoreButton, Text, View } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
 import { useDebounce, useToggle } from 'hooks';
 import { useApp } from 'providers/app';
+import { useStore } from 'providers/store';
 
 import { IoTrashOutline } from 'react-icons/io5';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { FILTER, MODALS, ORDER } from 'configs';
 import styled from 'styled-components';
-import { BsDot, BsPlusCircle } from 'react-icons/bs';
+import { BsPlusCircle } from 'react-icons/bs';
 
 const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
 
-  const {
-    loadingItems,
-    currentItem,
-    itemsList,
-    loadItems,
-    viewDetailsOf,
-    presentModal,
-  } = useApp();
+  const { loadingItems, loadItems, viewDetailsOf, currentItem, itemsList } =
+    useStore();
+
+  const { presentModal } = useApp();
 
   /**
    * Handle auto load items and search with filters

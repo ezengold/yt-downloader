@@ -32,6 +32,26 @@ export class Channels {
   static PLAYLIST_DOWNLOAD_FAILED = 'PLAYLIST_DOWNLOAD_FAILED';
 
   /**
+   * Get color scheme in user preferences
+   */
+  static GET_COLOR_SCHEME = 'GET_COLOR_SCHEME';
+
+  /**
+   * Save color scheme in user preferences
+   */
+  static SAVE_COLOR_SCHEME = 'SAVE_COLOR_SCHEME';
+
+  /**
+   * Get default download location
+   */
+  static GET_DEFAULT_DOWNLOAD_LOCATION = 'GET_DEFAULT_DOWNLOAD_LOCATION';
+
+  /**
+   * Set download location by default
+   */
+  static SET_DEFAULT_DOWNLOAD_LOCATION = 'SET_DEFAULT_DOWNLOAD_LOCATION';
+
+  /**
    * Built in ipc example
    */
   static IPC_EXAMPLE = 'ipc-example';

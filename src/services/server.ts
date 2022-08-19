@@ -1,4 +1,5 @@
-import { ChildProcessWithoutNullStreams, exec } from 'child_process';
+import { ChildProcessWithoutNullStreams, execFile } from 'child_process';
+import { app } from 'electron';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Channels, Message } from '../models';
 
@@ -56,7 +57,7 @@ export class MainServer {
       });
 
       ws.on('error', (err) => {
-        console.log(`Error on wss -> ${err?.message}`);
+        app.emit('openAlert', err?.message);
       });
 
       ws.on('close', (code, reason) => {
@@ -74,21 +75,19 @@ export class MainServer {
   }
 
   connectServer() {
-    exec(`python3 ${__dirname}/server.py`, (error) => {
+    execFile(`python3 ${__dirname}/server.py`, (error) => {
       if (error) {
-        console.log(`\n\nspawn error -> ${error}\n\n`);
+        app.emit('openAlert', error?.message);
       }
     });
   }
 
   fetchPlaylistContent(link: string, callback: (response: string) => void) {
-    exec(
+    execFile(
       `python3 ${__dirname}/server.py ${Channels.PLAYLIST_CONTENTS} ${link}`,
       (error, stdout, stderr) => {
         if (error || stderr) {
-          // console.log(
-          //   `\n${Channels.PLAYLIST_CONTENTS} error -> ${error} | ${stderr}\n`
-          // );
+          app.emit('openAlert', error?.message);
           callback('');
         } else {
           callback(stdout);

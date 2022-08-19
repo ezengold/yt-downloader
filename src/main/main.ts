@@ -8,6 +8,7 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { AppDatabase } from '../database';
 import { MainServer } from '../services/server';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -146,8 +147,34 @@ app.on('openNewDownload', () =>
   mainWindow?.webContents.send('openNewDownload')
 );
 
+app.on('openAlert', (message) =>
+  mainWindow?.webContents.send('openAlert', message)
+);
+
 ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
   server.fetchPlaylistContent(link, (response) => {
     event.reply(Channels.PLAYLIST_CONTENTS, response);
   });
 });
+
+// user preferences
+const db = new AppDatabase();
+
+ipcMain.on(Channels.GET_COLOR_SCHEME, async (event) => {
+  event.reply(Channels.GET_COLOR_SCHEME, db.getColorScheme());
+});
+
+ipcMain.on(Channels.SAVE_COLOR_SCHEME, async (event, [colorScheme]) => {
+  db.updateColorScheme(colorScheme);
+});
+
+ipcMain.on(Channels.GET_DEFAULT_DOWNLOAD_LOCATION, async (event) => {
+  event.reply(Channels.GET_DEFAULT_DOWNLOAD_LOCATION, db.getDownloadLocation());
+});
+
+ipcMain.on(
+  Channels.SET_DEFAULT_DOWNLOAD_LOCATION,
+  async (event, [location]) => {
+    db.updateDownloadLocation(location);
+  }
+);

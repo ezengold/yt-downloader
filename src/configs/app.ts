@@ -18,5 +18,3 @@ export const MODALS = {
   SETTINGS: 'SETTINGS',
   NEW_DOWNLOAD: 'NEW_DOWNLOAD',
 };
-
-export const DB_NAME = 'yt-dlp^181022';

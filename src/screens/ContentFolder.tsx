@@ -1,7 +1,7 @@
 import React from 'react';
 import { Checkbox, Image, ProgressBar, Text, View } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
-import { useApp } from 'providers/app';
+import { useStore } from 'providers/store';
 import styled from 'styled-components';
 import { IoTrashOutline } from 'react-icons/io5';
 import { BsPlayFill, BsStopFill } from 'react-icons/bs';
@@ -15,7 +15,7 @@ import {
 const ContentFolder = ({ overlayed }) => {
   const { colors } = useTheme();
 
-  const { currentItem } = useApp();
+  const { currentItem } = useStore();
 
   return (
     <View

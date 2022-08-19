@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, ConfirmDelete, SettingsModal, NewDownload } from 'components';
 import { useApp } from 'providers/app';
+import { useStore } from 'providers/store';
 import { useTheme } from 'providers/theme';
 import { MODALS } from 'configs';
 import Aside from './Aside';
@@ -17,8 +18,17 @@ const AppModals = {
 const MainScreen = () => {
   const { colors } = useTheme();
 
-  const { currentItem, modalShown, modalKey, modalProps, presentModal } =
-    useApp();
+  const { currentItem } = useStore();
+
+  const {
+    modalShown,
+    modalKey,
+    modalProps,
+    presentModal,
+    alertShown,
+    alert,
+    presentAlert,
+  } = useApp();
 
   const openSettings = () => {
     presentModal({ modalKey: MODALS.SETTINGS });
@@ -35,10 +45,18 @@ const MainScreen = () => {
     presentModal({ modalKey: MODALS.NEW_DOWNLOAD });
   };
 
+  const openAlert = (message: string) => {
+    presentAlert({
+      kind: 'error',
+      message,
+    });
+  };
+
   useEffect(() => {
     window.electron.ipcRenderer.on('openSettings', openSettings);
     window.electron.ipcRenderer.on('openAbout', openAbout);
     window.electron.ipcRenderer.on('openNewDownload', openNewDownload);
+    window.electron.ipcRenderer.on('openAlert', openAlert);
     return () => {
       window.electron.ipcRenderer?.removeListener?.(
         'openSettings',
@@ -69,6 +87,18 @@ const MainScreen = () => {
           })(modalKey, modalProps)}
         </View>
       )}
+      <View
+        className={`ezen-alert ${alertShown ? 'active' : ''}`}
+        background={colors.background}
+        shadow={`0px 0px 4px ${colors.text}4D`}
+        style={{
+          borderLeft: `5px solid ${
+            alert?.kind === 'success' ? colors.principal : colors?.red
+          }`,
+        }}
+      >
+        {alert?.message}
+      </View>
     </View>
   );
 };

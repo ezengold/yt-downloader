@@ -1,41 +1,9 @@
 import React, { useState } from 'react';
-import { AppType, DownloadItem, PresentModalProps } from 'types';
-import { DOWNLOAD_ITEMS_LIST } from 'dataset';
-import { FILTER, ORDER } from 'configs';
+import { AppType, PresentAlertProps, PresentModalProps } from 'types';
 
 const AppContext = React.createContext<AppType>({});
 
 const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [loadingItems, setLoadingItems] = useState(false);
-
-  const [items, setItems] = useState<DownloadItem[]>([]);
-
-  const loadItems = async (
-    search = '',
-    filter = FILTER.DATE,
-    filterOrder = ORDER.DESC,
-    verbose = false
-  ) => {
-    setLoadingItems(verbose);
-    setTimeout(
-      () => {
-        setItems(
-          DOWNLOAD_ITEMS_LIST.filter((el) =>
-            el?.title?.toUpperCase().includes(String(search?.toUpperCase()))
-          )
-        );
-        setLoadingItems(false);
-      },
-      verbose ? 200 : 0
-    );
-  };
-
-  const [currentItem, setCurrentItem] = useState<?DownloadItem>(null);
-
-  const viewDetailsOf = (item: DownloadItem) => {
-    setCurrentItem((old) => (old?.id === item?.id ? null : item));
-  };
-
   /**
    * Handle global modal
    */
@@ -53,7 +21,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const handleShowModal = (props: PresentModalProps) => {
     setModalShown(true);
     setModalKey(props.modalKey);
-    setModalProps(props.modalProps);
+    setModalProps(props?.modalProps);
     setModalCallbacks([
       typeof props.onHide === 'function' ? props.onHide : () => {},
     ]);
@@ -67,21 +35,41 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     setModalCallbacks([() => {}]);
   };
 
+  /**
+   * Handle alerts
+   */
+  const DefaultAlert = { message: '', kind: 'success' };
+
+  const [alertShown, setAlertShown] = useState(false);
+
+  const [currentAlert, setCurrentAlert] = useState(DefaultAlert);
+
+  const handleShowAlert = (props: PresentAlertProps) => {
+    setCurrentAlert({
+      kind: props?.kind || 'success',
+      message: props?.message || '',
+    });
+    setAlertShown(true);
+    setTimeout(() => {
+      setAlertShown(false);
+      setCurrentAlert(DefaultAlert);
+    }, props?.duration || 5000);
+  };
+
   return (
     <AppContext.Provider
       value={{
-        loadingItems,
-        itemsList: items,
-        loadItems,
-        currentItem,
-        viewDetailsOf,
-
         // modal
         modalShown,
         presentModal: handleShowModal,
         closeModal: handleCloseModal,
         modalKey,
         modalProps,
+
+        // alert
+        alertShown,
+        alert: currentAlert,
+        presentAlert: handleShowAlert,
       }}
     >
       {children}

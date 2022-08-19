@@ -38,20 +38,40 @@ async def get_playlist_contents():
         }
     }))
 
-# async def time(websocket, path):
-#     args = await websocket.recv()
-#     args = args.split(" ")
-#     with subprocess.Popen(["./binaries/yt-dl-mac", args[0], args[1]],
-#                           stdout=subprocess.PIPE,
-#                           bufsize=1,
-#                           universal_newlines=True) as process:
-#         for line in process.stdout:
-#             line = line.rstrip()
-#             print(f"line = {line}")
-#             await websocket.send(line)
 
-if len(args) > 1:
-    if args[1] == PLAYLIST_CONTENTS:
-        asyncio.run(get_playlist_contents())
-else:
-    asyncio.run(connection())
+async def start_playlist_download():
+    print(json.dumps({
+        "topic": START_PAYLIST_DOWNLOAD,
+        "value": "Lorem ipsum dolor"
+    }))
+
+
+async def get_playlist_download_progression():
+    print(json.dumps({
+        "topic": PLAYLIST_PROGRESSION,
+        "value": "Lorem ipsum dolor"
+    }))
+
+
+async def stop_playlist_download():
+    print(json.dumps({
+        "topic": CANCEL_PAYLIST_DOWNLOAD,
+        "value": "Lorem ipsum dolor"
+    }))
+
+
+def main():
+    if len(args) > 1:
+        if args[1] == PLAYLIST_CONTENTS:
+            asyncio.run(get_playlist_contents())
+        elif args[1] == START_PAYLIST_DOWNLOAD:
+            asyncio.run(start_playlist_download())
+        elif args[1] == PLAYLIST_PROGRESSION:
+            asyncio.run(get_playlist_download_progression())
+        elif args[1] == CANCEL_PAYLIST_DOWNLOAD:
+            asyncio.run(stop_playlist_download())
+    else:
+        asyncio.run(connection())
+
+
+main()

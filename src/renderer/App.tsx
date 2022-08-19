@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from 'providers/theme';
 import { AppProvider } from 'providers/app';
+import { StoreProvider } from 'providers/store';
 import MainScreen from 'screens/MainScreen';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'components/default.scss';
@@ -18,7 +19,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AppProvider>
-        <AppRouter />
+        <StoreProvider>
+          <AppRouter />
+        </StoreProvider>
       </AppProvider>
     </ThemeProvider>
   );

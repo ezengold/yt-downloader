@@ -1,17 +1,25 @@
 import React from 'react';
 import { DownloadItem, DownloadSubItem, ItemSize, ItemSpeed } from 'models';
 
+export interface ColorsType {
+  principal: string;
+  second: string;
+  yellow: string;
+  red: string;
+  green: string;
+  card: string;
+  background: string;
+  text: string;
+}
+
+export interface ColorSchemeStore {
+  scheme: 'light' | 'dark' | string;
+  lightColors: ColorsType;
+  darkColors: ColorsType;
+}
+
 export interface ThemeType {
-  colors: {
-    principal: string;
-    second: string;
-    yellow: string;
-    red: string;
-    green: string;
-    card: string;
-    background: string;
-    text: string;
-  };
+  colors: ColorsType;
   scheme: 'light' | 'dark' | string;
   toggleScheme: (toScheme?: string) => void;
   resetDefaults: () => void;
@@ -179,7 +187,34 @@ export interface PresentModalProps {
   onHide?: (...args: any[]) => void;
 }
 
+export interface PresentAlertProps {
+  message: string;
+  kind: 'success' | 'error';
+  duration?: number;
+}
+
 export interface AppType {
+  /**
+   * Handle global modal
+   */
+  modalShown?: boolean;
+  presentModal: (props: PresentModalProps) => void;
+  closeModal: (...args: any[]) => void;
+  modalKey: string;
+  modalProps: object;
+
+  /**
+   * Handle alerts
+   */
+  alertShown?: boolean;
+  alert: {
+    message: string;
+    kind: 'success' | 'error';
+  };
+  presentAlert: (props: PresentAlertProps) => void;
+}
+
+export interface StoreType {
   loadingItems: boolean;
   itemsList: DownloadItem[];
   currentItem: DownloadItem | null;
@@ -190,15 +225,6 @@ export interface AppType {
     verbose?: boolean
   ) => Promise<void>;
   viewDetailsOf: (item: DownloadItem) => void;
-
-  /**
-   * Handle global modal
-   */
-  modalShown?: boolean;
-  presentModal: (props: PresentModalProps) => void;
-  closeModal: (...args: any[]) => void;
-  modalKey: string;
-  modalProps: object;
 }
 
 export interface MoreButtonProps {

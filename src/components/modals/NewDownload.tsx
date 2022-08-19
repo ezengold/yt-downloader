@@ -26,7 +26,6 @@ const NewDownload = () => {
   useEffect(() => {
     document.addEventListener('keydown', closeOnEscape);
     window.electron.ipcRenderer.on(Channels.PLAYLIST_CONTENTS, (response) => {
-      console.log(JSON.parse(response));
       setFetchingContents(false);
       setItem(DOWNLOAD_ITEMS_LIST[0]);
     });
@@ -35,7 +34,9 @@ const NewDownload = () => {
     };
   }, []);
 
-  const [link, setLink] = useState('');
+  const [link, setLink] = useState(
+    'https://github.com/extrabacon/python-shell'
+  );
 
   const [error, setError] = useState('');
 
