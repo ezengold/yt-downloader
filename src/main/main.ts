@@ -1,12 +1,8 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 /**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
- *
  * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
+ * `./src/main.js` using webpack. This gives some performance wins.
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
@@ -15,9 +11,11 @@ import log from 'electron-log';
 import { MainServer } from '../services/server';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { Channels } from '../models';
 
 // start main server for handling downloads
 const server = new MainServer();
+
 server.bootstrap();
 
 class AppUpdater {
@@ -32,7 +30,7 @@ let mainWindow: BrowserWindow | null = null;
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
+  // console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
 });
 
@@ -114,7 +112,7 @@ const createWindow = async () => {
   });
 
   // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
+  // eslint-disable-next-line no-new
   new AppUpdater();
 };
 
@@ -122,8 +120,6 @@ const createWindow = async () => {
  * Add event listeners...
  */
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -134,12 +130,10 @@ app
   .then(() => {
     createWindow();
     app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
       if (mainWindow === null) createWindow();
     });
   })
-  .catch(console.log);
+  .catch(() => {});
 
 /**
  * Custom events
@@ -151,3 +145,8 @@ app.on('openAbout', () => mainWindow?.webContents.send('openAbout'));
 app.on('openNewDownload', () =>
   mainWindow?.webContents.send('openNewDownload')
 );
+
+ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
+  const reponse = server.fetchPlaylistContent(link);
+  event.reply(Channels.PLAYLIST_CONTENTS, reponse);
+});

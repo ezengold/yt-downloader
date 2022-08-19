@@ -19,6 +19,7 @@ module.exports = {
     'jsx-a11y/click-events-have-key-events': 'off',
     'no-else-return': 'off',
     'class-methods-use-this': 'off',
+    'no-console': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

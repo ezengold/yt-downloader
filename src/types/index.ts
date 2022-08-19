@@ -45,7 +45,7 @@ export interface ViewProps {
   className?: string;
   style?: object;
   children?: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export interface ImageProps {
