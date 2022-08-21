@@ -101,6 +101,7 @@ const createWindow = async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    ipcMain.removeAllListeners(Channels.PLAYLIST_CONTENTS);
   });
 
   const menuBuilder = new MenuBuilder(mainWindow);
@@ -151,12 +152,6 @@ app.on('openAlert', (message) =>
   mainWindow?.webContents.send('openAlert', message)
 );
 
-ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
-  server.fetchPlaylistContent(link, (response) => {
-    event.reply(Channels.PLAYLIST_CONTENTS, response);
-  });
-});
-
 // user preferences
 const db = new AppDatabase();
 
@@ -177,4 +172,11 @@ ipcMain.on(
   async (event, [location]) => {
     db.updateDownloadLocation(location);
   }
+);
+
+ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
+  server.fetchPlaylistContent(link);
+});
+app.on(Channels.PLAYLIST_CONTENTS, (str) =>
+  mainWindow?.webContents.send(Channels.PLAYLIST_CONTENTS, str)
 );

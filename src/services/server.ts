@@ -1,4 +1,4 @@
-import { ChildProcessWithoutNullStreams, execFile } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { app } from 'electron';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Channels, Message } from '../models';
@@ -36,7 +36,7 @@ export class MainServer {
             break;
 
           case Channels.PLAYLIST_CONTENTS:
-            // no need of real time :)
+            app.emit(Channels.PLAYLIST_CONTENTS, JSON.stringify(response));
             break;
 
           case Channels.START_PAYLIST_DOWNLOAD:
@@ -61,38 +61,44 @@ export class MainServer {
       });
 
       ws.on('close', (code, reason) => {
-        console.log(`Close wss [${code}] -> ${reason?.toString()}`);
+        console.log(`WSS CLOSED`);
       });
     });
   }
 
-  parseMessage(data: WebSocket.RawData): Message | null {
+  parseMessage(data: WebSocket.RawData): Message<any> | null {
     try {
-      return JSON.parse(data.toString()) as Message;
+      return JSON.parse(data?.toString('utf-8')) as Message<any>;
     } catch (err) {
       return null;
     }
   }
 
   connectServer() {
-    execFile(`python3 ${__dirname}/server.py`, (error) => {
-      if (error) {
-        app.emit('openAlert', error?.message);
-      }
+    const pythonServer = spawn('python3', [`${__dirname}/server.py`], {
+      env: {
+        PATH: process.env.PATH,
+      },
+    });
+
+    pythonServer.stderr.on('error', (error) => {
+      app.emit('openAlert', error?.message);
     });
   }
 
-  fetchPlaylistContent(link: string, callback: (response: string) => void) {
-    execFile(
-      `python3 ${__dirname}/server.py ${Channels.PLAYLIST_CONTENTS} ${link}`,
-      (error, stdout, stderr) => {
-        if (error || stderr) {
-          app.emit('openAlert', error?.message);
-          callback('');
-        } else {
-          callback(stdout);
-        }
+  fetchPlaylistContent(link: string) {
+    const pythonServer = spawn(
+      'python3',
+      [`${__dirname}/server.py`, Channels.PLAYLIST_CONTENTS, link],
+      {
+        env: {
+          PATH: process.env.PATH,
+        },
       }
     );
+
+    pythonServer.stderr.on('error', (error) => {
+      app.emit('openAlert', error?.message);
+    });
   }
 }

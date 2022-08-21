@@ -37,6 +37,10 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     setCurrentItem((old) => (old?.id === item?.id ? null : item));
   };
 
+  const addNewPlaylist = (item: DownloadItem) => {
+    //
+  };
+
   return (
     <StoreContext.Provider
       value={{

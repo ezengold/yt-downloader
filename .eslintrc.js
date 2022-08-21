@@ -20,6 +20,8 @@ module.exports = {
     'no-else-return': 'off',
     'class-methods-use-this': 'off',
     'no-console': 'off',
+    'react/no-array-index-key': 'off',
+    'react-hooks/exhaustive-deps': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

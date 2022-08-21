@@ -148,6 +148,7 @@ export interface ColorInputProps {
 
 export interface DownloadSubItemParams {
   id: string;
+  video_id?: string;
   title: string;
   img: string | undefined;
   size: ItemSize;
@@ -155,10 +156,15 @@ export interface DownloadSubItemParams {
   speed?: ItemSpeed;
   status: string;
   error?: string;
+  numberOfSeconds?: number;
+  author?: string;
+  description?: string;
 }
 
 export interface DownloadItemParams {
   id: string;
+  playlist_id?: string;
+  url?: string;
   title: string;
   img?: string | undefined;
   totalSize?: ItemSize;
@@ -168,6 +174,7 @@ export interface DownloadItemParams {
   status?: string;
   items: DownloadSubItem[];
   error?: string;
+  owner?: string;
 }
 
 export interface ItemProps {

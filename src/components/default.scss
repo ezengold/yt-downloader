@@ -131,6 +131,24 @@ a {
   animation: fadeIn 0.2s;
 }
 
+.no-scroll-bar {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  ::-webkit-scrollbar-track {
+    display: none;
+  }
+  ::-webkit-scrollbar-thumb {
+    display: none;
+  }
+  ::-webkit-scrollbar-corner {
+    display: none;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
 .ezen {
   &-container {
     width: 100vw;

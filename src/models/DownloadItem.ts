@@ -6,6 +6,10 @@ import { DownloadSubItem } from './DownloadSubItem';
 export class DownloadItem {
   id: string;
 
+  playlist_id?: string = '';
+
+  url?: string = '';
+
   title: string;
 
   img?: string | undefined;
@@ -24,8 +28,12 @@ export class DownloadItem {
 
   error?: string;
 
+  owner?: string = '';
+
   constructor(params: DownloadItemParams) {
     this.id = params?.id;
+    this.playlist_id = params?.playlist_id;
+    this.url = params?.url;
     this.title = params?.title;
     this.img = params?.img;
     this.totalSize = params?.totalSize;
@@ -35,5 +43,6 @@ export class DownloadItem {
     this.status = params?.status;
     this.items = params?.items;
     this.error = params?.error;
+    this.owner = params?.owner;
   }
 }
