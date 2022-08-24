@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Input, Text } from 'components';
+import { View, Input, Text, Image } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
 import { useApp } from 'providers/app';
+import { useStore } from 'providers/store';
 import { useClickOutside } from 'hooks';
 import { AiOutlineLink } from 'react-icons/ai';
 import {
@@ -18,15 +19,23 @@ import { BiSearchAlt } from 'react-icons/bi';
 import moment from 'moment';
 import { DATE_FORMAT, PENDING_STATUS } from 'configs';
 import styled from 'styled-components';
+import { prefeeredSizeOf } from 'helpers';
 
 const NewDownload = () => {
   const { colors } = useTheme();
 
-  const [item, setItem] = useState<?DownloadItem>(null);
+  const [item, setItem] = useState<DownloadItem>(null);
+
+  const { addDownloadItem, downloadLocation, updateDownloadLocation } =
+    useStore();
 
   const ref = React.useRef();
 
   const { closeModal, presentAlert } = useApp();
+
+  const [showSizes, setShowSizes] = useState(false);
+
+  const [seeding, setSeeding] = useState(false);
 
   const [fetchingContents, setFetchingContents] = useState(false);
 
@@ -46,12 +55,14 @@ const NewDownload = () => {
   );
 
   const handleSubmit = () => {
+    if (fetchingContents || seeding) return;
     if (
       /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\\-]+\?v=|embed\/|v\/)?)([\w\\-]+)(\S+)?$/.test(
         link
       )
     ) {
       setItem(null);
+      setShowSizes(false);
       setFetchingContents(true);
       window.electron.ipcRenderer.sendMessage(Channels.PLAYLIST_CONTENTS, [
         link,
@@ -59,6 +70,7 @@ const NewDownload = () => {
     } else {
       setError('Invalid URL');
       setItem(null);
+      setShowSizes(false);
       setTimeout(() => {
         setError('');
       }, 2000);
@@ -91,7 +103,7 @@ const NewDownload = () => {
                   video_id: video?.videoId || '',
                   title: video?.title || '',
                   description: video?.shortDescription || '',
-                  size: new ItemSize(video?.size, SizeUnit.BYTES),
+                  size: new ItemSize(video?.size || 0, SizeUnit.BYTES),
                   currentSize: new ItemSize(0, SizeUnit.BYTES),
                   status: PENDING_STATUS,
                   img: Array.isArray(video?.thumbnail?.thumbnails)
@@ -120,20 +132,91 @@ const NewDownload = () => {
     }
   };
 
+  const handleStartDownload = () => {
+    if (!seeding) {
+      setShowSizes(true);
+      setSeeding(true);
+      window.electron.ipcRenderer.sendMessage(Channels.SEED_VIDEO_SIZE, [
+        JSON.stringify(item?.items?.map((el) => el?.video_id)),
+      ]);
+    }
+  };
+
+  const handleAddDownloadItem = React.useCallback(
+    (str?: string) => {
+      const response = new Message<any>(str as string);
+
+      if (response?.success) {
+        if (Array.isArray(response?.value)) {
+          const updatedItem: DownloadItem = {
+            ...item,
+            items: item?.items?.map((el) => {
+              const current = response?.value?.find(
+                (s: any) => s?.video_id === el?.video_id
+              );
+
+              return current
+                ? {
+                    ...el,
+                    size: new ItemSize(
+                      current?.video_size || 0,
+                      SizeUnit.BYTES
+                    ),
+                  }
+                : el;
+            }),
+          };
+
+          updatedItem.totalSize = new ItemSize(
+            updatedItem?.items?.reduce(
+              (prev, current) => prev + current?.size?.value,
+              0
+            ),
+            SizeUnit.BYTES
+          );
+
+          setItem(updatedItem);
+
+          if (updatedItem && updatedItem?.id) {
+            setTimeout(() => {
+              setSeeding(false);
+              addDownloadItem(updatedItem);
+              closeModal();
+            }, 3000);
+          } else {
+            presentAlert({
+              kind: 'error',
+              message: 'An unexpected error occures !',
+            });
+            setSeeding(false);
+          }
+        }
+      } else {
+        setSeeding(false);
+        presentAlert({ kind: 'error', message: response?.value as string });
+      }
+    },
+    [item]
+  );
+
   useEffect(() => {
     document.addEventListener('keydown', closeOnEscape);
     window.electron.ipcRenderer.on(
       Channels.PLAYLIST_CONTENTS,
       onContentsReceived
     );
+    window.electron.ipcRenderer.on(
+      Channels.SEED_VIDEO_SIZE,
+      handleAddDownloadItem
+    );
     return () => {
       document.removeEventListener('keydown', closeOnEscape);
-      window.electron.ipcRenderer?.removeListener?.(
-        Channels.PLAYLIST_CONTENTS,
-        onContentsReceived
+      window.electron.ipcRenderer?.removeAllListeners(
+        Channels.PLAYLIST_CONTENTS
       );
+      window.electron.ipcRenderer?.removeAllListeners(Channels.SEED_VIDEO_SIZE);
     };
-  }, [link]);
+  }, [link, item]);
 
   return (
     <div
@@ -208,44 +291,88 @@ const NewDownload = () => {
         </View>
         {!!item?.id && (
           <Content className="w-100 mt-3 pb-5">
-            <Text>Title : {item?.title}</Text>
-            <div className="w-100 d-flex flex-wrap mb-3">
-              <View className="d-flex align-items-center me-5">
-                Owner :{' '}
-                <Text
-                  color={colors.yellow}
-                  font={AppFonts.BOLD}
-                  className="ms-1"
-                >
-                  {item?.owner || '-'}
-                </Text>
-              </View>
-              <View className="d-flex align-items-center">
-                Number of videos :{' '}
-                <Text
-                  color={colors.yellow}
-                  font={AppFonts.BOLD}
-                  className="ms-1"
-                >
-                  {item?.items?.length || 0}
-                </Text>
-              </View>
+            <div className="w-100 d-flex align-items-start mb-3">
+              <Image
+                src={item?.img}
+                height="80px"
+                width="80px"
+                resizeMode="cover"
+                radius="10px"
+                className="me-4"
+              />
+              <div className="d-flex flex-column">
+                <Text>Title : {item?.title}</Text>
+                <View className="d-flex flex-wrap align-items-center my-2">
+                  Owner :{' '}
+                  <Text
+                    color={colors.yellow}
+                    font={AppFonts.BOLD}
+                    className="ms-1 me-4"
+                  >
+                    {item?.owner || '-'}
+                  </Text>
+                  Number of videos :{' '}
+                  <Text
+                    color={colors.yellow}
+                    font={AppFonts.BOLD}
+                    className="ms-1 me-4"
+                  >
+                    {item?.owner || '-'}
+                  </Text>
+                  {showSizes && (
+                    <>
+                      Total size :
+                      <Text
+                        color={colors.yellow}
+                        font={AppFonts.BOLD}
+                        className="ms-1"
+                      >
+                        {prefeeredSizeOf(item?.totalSize)?.value?.toFixed(2)}{' '}
+                        {prefeeredSizeOf(item?.totalSize)?.unit?.title || '-'}
+                      </Text>
+                    </>
+                  )}
+                </View>
+                <View className="d-flex align-items-center">
+                  Saving location :{' '}
+                  <Text
+                    color={colors.principal}
+                    font={AppFonts.REGULAR}
+                    className="ms-1 cursor-pointer"
+                    onClick={!seeding ? updateDownloadLocation : () => {}}
+                  >
+                    {downloadLocation}
+                  </Text>
+                </View>
+              </div>
             </div>
             <Table
               mainColor={colors.principal}
               textColor={colors.text}
               className="w-100"
             >
-              <tr>
-                <th>N°</th>
-                <th>Title</th>
-              </tr>
-              {item?.items?.map((subItem, index) => (
-                <tr key={String(index)}>
-                  <td>{index + 1}</td>
-                  <td>{subItem?.title || ''}</td>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Title</th>
+                  {showSizes && <th>Size</th>}
                 </tr>
-              ))}
+              </thead>
+              <tbody>
+                {item?.items?.map((subItem, index) => (
+                  <tr key={String(index)}>
+                    <td>{index + 1}</td>
+                    <td>{subItem?.title || ''}</td>
+                    {showSizes && (
+                      <td className="white-space-nowrap">
+                        {prefeeredSizeOf(subItem?.size)?.value?.toFixed(2) ||
+                          '0'}{' '}
+                        {prefeeredSizeOf(subItem?.size)?.unit?.title || '-'}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
             </Table>
           </Content>
         )}
@@ -253,10 +380,12 @@ const NewDownload = () => {
           <View
             className="ezen-btn text-uppercase mt-3 rounded-5"
             height="45px"
-            color="white"
-            background={colors.principal}
+            color={seeding ? colors.principal : 'white'}
+            border={seeding ? `1px solid ${colors.principal}` : '0px solid'}
+            background={seeding ? 'transparent' : colors.principal}
+            onClick={handleStartDownload}
           >
-            Start downloading
+            {seeding ? 'Seeding...' : 'Start downloading'}
           </View>
         )}
       </View>

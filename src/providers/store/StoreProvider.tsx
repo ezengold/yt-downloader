@@ -1,34 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StoreType } from 'types';
-import { DOWNLOAD_ITEMS_LIST } from 'dataset';
 import { FILTER, ORDER } from 'configs';
-import { DownloadItem } from 'models';
+import { Channels, DownloadItem } from 'models';
 
 const StoreContext = React.createContext<StoreType>({});
 
 const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const [loadingItems, setLoadingItems] = useState(false);
+  /**
+   * DOWNLOAD LOCATION
+   */
+  const [downloadLocation, setDownloadLocation] = useState('');
 
+  const updateLocation = () => {
+    window.electron.ipcRenderer.sendMessage(
+      Channels.SET_DEFAULT_DOWNLOAD_LOCATION,
+      [downloadLocation]
+    );
+  };
+
+  const handleFetchLocation = () => {
+    window.electron.ipcRenderer.sendMessage(
+      Channels.GET_DEFAULT_DOWNLOAD_LOCATION,
+      []
+    );
+  };
+
+  /**
+   * DOWNLOAD ITEMS
+   */
   const [items, setItems] = useState<DownloadItem[]>([]);
 
   const loadItems = async (
     search = '',
     filter = FILTER.DATE,
-    filterOrder = ORDER.DESC,
-    verbose = false
+    filterOrder = ORDER.DESC
   ) => {
-    setLoadingItems(verbose);
-    setTimeout(
-      () => {
-        setItems(
-          DOWNLOAD_ITEMS_LIST.filter((el) =>
-            el?.title?.toUpperCase().includes(String(search?.toUpperCase()))
-          )
-        );
-        setLoadingItems(false);
-      },
-      verbose ? 200 : 0
-    );
+    window.electron.ipcRenderer.sendMessage(Channels.SEARCH_DOWNLOAD_ITEMS, [
+      search,
+      filter,
+      filterOrder,
+    ]);
   };
 
   const [currentItem, setCurrentItem] = useState<?DownloadItem>(null);
@@ -38,17 +49,44 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const addNewPlaylist = (item: DownloadItem) => {
-    //
+    const updated = [...items, item];
+    setItems(updated);
+    window.electron.ipcRenderer.sendMessage(Channels.PATCH_DOWNLOAD_ITEMS, [
+      JSON.stringify(updated),
+    ]);
   };
+
+  useEffect(() => {
+    handleFetchLocation();
+    window.electron.ipcRenderer.on(
+      Channels.GET_DEFAULT_DOWNLOAD_LOCATION,
+      (path) => setDownloadLocation((path as string) || '')
+    );
+    window.electron.ipcRenderer.on(Channels.GET_DOWNLOAD_ITEMS, (itemsStr) => {
+      try {
+        setItems(JSON.parse(itemsStr as string));
+      } catch (error) {
+        // ignore
+      }
+    });
+    return () => {
+      window.electron.ipcRenderer.removeAllListeners(
+        Channels.GET_DOWNLOAD_ITEMS
+      );
+    };
+  }, []);
 
   return (
     <StoreContext.Provider
       value={{
-        loadingItems,
         itemsList: items,
         loadItems,
         currentItem,
         viewDetailsOf,
+        addDownloadItem: addNewPlaylist,
+
+        downloadLocation,
+        updateDownloadLocation: updateLocation,
       }}
     >
       {children}

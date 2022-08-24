@@ -3,9 +3,15 @@ import { ItemProps } from 'types';
 import { ProgressBar, Image, Text, Checkbox } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
 import styled from 'styled-components';
-import { CANCELED_STATUS, COMPLETED_STATUS, RUNNING_STATUS } from 'configs';
+import {
+  CANCELED_STATUS,
+  COMPLETED_STATUS,
+  PENDING_STATUS,
+  RUNNING_STATUS,
+} from 'configs';
 import { BsCheckAll } from 'react-icons/bs';
 import { FiAlertTriangle } from 'react-icons/fi';
+import { prefeeredSizeOf } from 'helpers';
 
 const Item = (props: ItemProps) => {
   const { colors } = useTheme();
@@ -61,14 +67,19 @@ const Item = (props: ItemProps) => {
             {props.item?.error}
           </Text>
         )}
+        {props.item?.status === PENDING_STATUS && (
+          <Text color={colors.yellow} size={13} className="my-2">
+            {props.item?.status}
+          </Text>
+        )}
         <div className="w-100 d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center">
             <Text size={12} className="me-2">
               Size :{' '}
             </Text>
             <Text color={colors.principal} size={12} font={AppFonts.BOLD}>
-              {props.item?.totalSize?.toPreferredSize()?.value}{' '}
-              {props.item?.totalSize?.toPreferredSize()?.unit?.title}
+              {prefeeredSizeOf(props.item?.totalSize)?.value?.toFixed(2)}{' '}
+              {prefeeredSizeOf(props.item?.totalSize)?.unit?.title}
             </Text>
           </div>
           <Text size={12}>Added at : {props.item?.addedAt}</Text>

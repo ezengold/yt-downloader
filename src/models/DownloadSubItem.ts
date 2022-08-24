@@ -30,7 +30,6 @@ export class DownloadSubItem {
   constructor(params: DownloadSubItemParams) {
     this.id = params?.id;
     this.video_id = params?.video_id;
-    this.url = params?.url;
     this.title = params?.title;
     this.img = params?.img;
     this.size = params?.size;

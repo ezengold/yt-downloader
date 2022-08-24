@@ -169,13 +169,13 @@ const MenuItem = styled.div`
 const Content = styled.div`
   background-color: ${({ backgroundColor }) => backgroundColor || 'white'};
   boxshadow: 2px 4px 10px ${({ shadowColor }) => shadowColor || 'black'};
-  width: ${({ isActive }) => (isActive === '1' ? '180px' : '160px')};
-  height: ${({ isActive }) => (isActive === '1' ? '225px' : '200px')};
+  width: ${({ isActive }) => (isActive === '1' ? '180px' : '100px')};
+  height: ${({ isActive }) => (isActive === '1' ? '225px' : '150px')};
   position: absolute;
   z-index: 100;
   border-radius: 15px;
   overflow: hidden;
   padding: 0;
   opacity: ${({ isActive }) => isActive || '0'};
-  transition: height 0.05s linear, width 0.05s linear, opacity 0.05s ease-out;
+  transition: height 0.05s linear, width 0.05s linear, opacity 0.15s ease-out;
 `;

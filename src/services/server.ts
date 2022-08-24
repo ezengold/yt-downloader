@@ -1,12 +1,10 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { app } from 'electron';
+import { BrowserWindow } from 'electron';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Channels, Message } from '../models';
 
 export class MainServer {
-  static WSS_HOST = '127.0.0.1';
-
-  static WSS_PORT = 5678;
+  mainWindow: BrowserWindow | null | undefined;
 
   server: ChildProcessWithoutNullStreams | undefined;
 
@@ -19,8 +17,8 @@ export class MainServer {
 
   createWebSocketServer(): void {
     this.socketServer = new WebSocketServer({
-      port: MainServer.WSS_PORT,
-      host: MainServer.WSS_HOST,
+      port: Channels.PORT,
+      host: Channels.HOST,
     });
     this.installWssListeners();
   }
@@ -36,19 +34,31 @@ export class MainServer {
             break;
 
           case Channels.PLAYLIST_CONTENTS:
-            app.emit(Channels.PLAYLIST_CONTENTS, JSON.stringify(response));
+            this.mainWindow?.webContents?.send(
+              Channels.PLAYLIST_CONTENTS,
+              JSON.stringify(response)
+            );
             break;
 
-          case Channels.START_PAYLIST_DOWNLOAD:
+          case Channels.SEED_VIDEO_SIZE:
+            this.mainWindow?.webContents?.send(
+              Channels.SEED_VIDEO_SIZE,
+              JSON.stringify(response)
+            );
             break;
 
-          case Channels.PLAYLIST_PROGRESSION:
+          case Channels.START_VIDEOS_DOWNLOAD:
+            this.mainWindow?.webContents?.send(
+              Channels.START_VIDEOS_DOWNLOAD,
+              JSON.stringify(response)
+            );
             break;
 
-          case Channels.CANCEL_PAYLIST_DOWNLOAD:
-            break;
-
-          case Channels.PLAYLIST_DOWNLOAD_FAILED:
+          case Channels.DONWLOAD_PROGRESSION:
+            this.mainWindow?.webContents?.send(
+              Channels.DONWLOAD_PROGRESSION,
+              JSON.stringify(response)
+            );
             break;
 
           default:
@@ -57,7 +67,7 @@ export class MainServer {
       });
 
       ws.on('error', (err) => {
-        app.emit('openAlert', err?.message);
+        this.mainWindow?.webContents?.send('openAlert', err?.message);
       });
 
       ws.on('close', (code, reason) => {
@@ -68,9 +78,22 @@ export class MainServer {
 
   parseMessage(data: WebSocket.RawData): Message<any> | null {
     try {
-      return JSON.parse(data?.toString('utf-8')) as Message<any>;
+      const decoded = JSON.parse(data?.toString('utf-8')) as object;
+      if (
+        decoded.hasOwnProperty('success') &&
+        decoded.hasOwnProperty('value') &&
+        decoded.hasOwnProperty('topic')
+      ) {
+        return decoded as Message<any>;
+      } else {
+        throw new Error('NOT_MESSAGE_FORMAT');
+      }
     } catch (err) {
-      return null;
+      const error = new Message<any>();
+      error.success = false;
+      error.topic = Channels.UNKNOWN_ERROR;
+      error.value = JSON.parse(data?.toString('utf-8'));
+      return error;
     }
   }
 
@@ -82,7 +105,7 @@ export class MainServer {
     });
 
     pythonServer.stderr.on('error', (error) => {
-      app.emit('openAlert', error?.message);
+      this.mainWindow?.webContents?.send('openAlert', error?.message);
     });
   }
 
@@ -96,9 +119,62 @@ export class MainServer {
         },
       }
     );
+    this.handleProcess(pythonServer);
+  }
 
-    pythonServer.stderr.on('error', (error) => {
-      app.emit('openAlert', error?.message);
+  seedVideos(videoIds: string) {
+    const pythonServer = spawn(
+      'python3',
+      [`${__dirname}/server.py`, Channels.SEED_VIDEO_SIZE, videoIds],
+      {
+        env: {
+          PATH: process.env.PATH,
+        },
+      }
+    );
+    this.handleProcess(pythonServer);
+  }
+
+  downloadVideos(videoIds: string) {
+    const pythonServer = spawn(
+      'python3',
+      [`${__dirname}/server.py`, Channels.START_VIDEOS_DOWNLOAD, videoIds],
+      {
+        env: {
+          PATH: process.env.PATH,
+        },
+      }
+    );
+    this.handleProcess(pythonServer);
+  }
+
+  handleProcess(process: ChildProcessWithoutNullStreams) {
+    process.stdout.on('data', (data) => {
+      const response = this.parseMessage(data);
+
+      if (!response?.success) {
+        if (response?.topic === Channels.UNKNOWN_ERROR) {
+          // console.log({ data: data?.toString() });
+          this.mainWindow?.webContents.send(
+            'openAlert',
+            'An unexpected error occured !'
+          );
+        } else {
+          this.mainWindow?.webContents.send(
+            Channels.ERROR_OCCURED,
+            JSON.stringify(response)
+          );
+          this.mainWindow?.webContents.send('openAlert', response?.value);
+        }
+      }
+    });
+
+    process.stderr.on('error', (error) => {
+      // console.log({ error });
+      this.mainWindow?.webContents.send(
+        'openAlert',
+        'An unexpected error occured !'
+      );
     });
   }
 }

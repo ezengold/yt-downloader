@@ -14,16 +14,13 @@ import { BsPlusCircle } from 'react-icons/bs';
 const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
 
-  const { loadingItems, loadItems, viewDetailsOf, currentItem, itemsList } =
-    useStore();
+  const { loadItems, viewDetailsOf, currentItem, itemsList } = useStore();
 
   const { presentModal } = useApp();
 
   /**
    * Handle auto load items and search with filters
    */
-  const [hasLoaded, setHasLoaded] = useState(false);
-
   const [search, setSearch] = useState('');
 
   const [filter, setFilter] = useState(FILTER.DATE);
@@ -46,8 +43,7 @@ const Aside = ({ overlayed }) => {
 
   useDebounce(
     () => {
-      loadItems(search, filter, filterOrder, !hasLoaded);
-      setHasLoaded(true);
+      loadItems(search, filter, filterOrder);
     },
     500,
     [search, filter, filterOrder]
@@ -146,7 +142,11 @@ const Aside = ({ overlayed }) => {
           value={search}
           onChange={(e) => setSearch(e?.target?.value)}
           iconRight={
-            <AiOutlineSearch size={17} color={colors?.text} className="mx-2" />
+            <AiOutlineSearch
+              size={17}
+              color={search ? colors?.principal : colors?.text}
+              className="mx-2 cursor-pointer"
+            />
           }
         />
         <View height="30px" className="my-3 w-100 d-flex align-items-center">
@@ -166,9 +166,7 @@ const Aside = ({ overlayed }) => {
         indicatorForeground={colors.text}
         indicatorBackground={colors.background}
       >
-        {loadingItems ? (
-          <Text className="w-100 text-center my-5">Loading...</Text>
-        ) : Array.isArray(itemsList) && itemsList.length > 0 ? (
+        {Array.isArray(itemsList) && itemsList.length > 0 ? (
           itemsList.map((item) => {
             const isChecked = selectedIds.includes(item?.id);
 

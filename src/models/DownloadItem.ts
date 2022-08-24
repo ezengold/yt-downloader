@@ -10,6 +10,8 @@ export class DownloadItem {
 
   url?: string = '';
 
+  location?: string = '';
+
   title: string;
 
   img?: string | undefined;
@@ -34,6 +36,7 @@ export class DownloadItem {
     this.id = params?.id;
     this.playlist_id = params?.playlist_id;
     this.url = params?.url;
+    this.location = params?.location;
     this.title = params?.title;
     this.img = params?.img;
     this.totalSize = params?.totalSize;

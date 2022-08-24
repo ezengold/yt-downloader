@@ -5,7 +5,7 @@
  * `./src/main.js` using webpack. This gives some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { AppDatabase } from '../database';
@@ -102,6 +102,7 @@ const createWindow = async () => {
   mainWindow.on('closed', () => {
     mainWindow = null;
     ipcMain.removeAllListeners(Channels.PLAYLIST_CONTENTS);
+    ipcMain.removeAllListeners(Channels.SEED_VIDEO_SIZE);
   });
 
   const menuBuilder = new MenuBuilder(mainWindow);
@@ -112,6 +113,9 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
+
+  // register windown in server
+  server.mainWindow = mainWindow;
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line no-new
@@ -148,35 +152,85 @@ app.on('openNewDownload', () =>
   mainWindow?.webContents.send('openNewDownload')
 );
 
-app.on('openAlert', (message) =>
-  mainWindow?.webContents.send('openAlert', message)
-);
-
-// user preferences
+// database
 const db = new AppDatabase();
 
-ipcMain.on(Channels.GET_COLOR_SCHEME, async (event) => {
-  event.reply(Channels.GET_COLOR_SCHEME, db.getColorScheme());
+ipcMain.on(Channels.GET_COLOR_SCHEME, async (_) => {
+  mainWindow?.webContents.send(Channels.GET_COLOR_SCHEME, db.getColorScheme());
 });
 
-ipcMain.on(Channels.SAVE_COLOR_SCHEME, async (event, [colorScheme]) => {
+ipcMain.on(Channels.SAVE_COLOR_SCHEME, async (_, [colorScheme]) => {
   db.updateColorScheme(colorScheme);
 });
 
-ipcMain.on(Channels.GET_DEFAULT_DOWNLOAD_LOCATION, async (event) => {
-  event.reply(Channels.GET_DEFAULT_DOWNLOAD_LOCATION, db.getDownloadLocation());
+ipcMain.on(Channels.GET_DEFAULT_DOWNLOAD_LOCATION, async () => {
+  mainWindow?.webContents.send(
+    Channels.GET_DEFAULT_DOWNLOAD_LOCATION,
+    db.getDownloadLocation()
+  );
 });
 
 ipcMain.on(
   Channels.SET_DEFAULT_DOWNLOAD_LOCATION,
-  async (event, [location]) => {
-    db.updateDownloadLocation(location);
+  async (_, [currentPath]: string) => {
+    if (mainWindow) {
+      try {
+        await dialog
+          .showOpenDialog(mainWindow, {
+            defaultPath: currentPath || app.getPath('downloads'),
+            properties: ['openDirectory'],
+          })
+          .then((result) => {
+            if (!result.canceled) {
+              db.updateDownloadLocation(result.filePaths[0] || currentPath);
+              mainWindow?.webContents.send(
+                Channels.GET_DEFAULT_DOWNLOAD_LOCATION,
+                result.filePaths[0] || currentPath
+              );
+            }
+          })
+          .catch(() => {
+            mainWindow?.webContents.send(
+              'openAlert',
+              'Unable to resolve a path'
+            );
+          });
+      } catch (error) {
+        mainWindow?.webContents.send('openAlert', 'Unable to resolve a path');
+      }
+    }
   }
 );
 
-ipcMain.on(Channels.PLAYLIST_CONTENTS, async (event, link) => {
+ipcMain.on(Channels.GET_DOWNLOAD_ITEMS, async (_) => {
+  mainWindow?.webContents?.send(
+    Channels.GET_DOWNLOAD_ITEMS,
+    db.getDownloadItems()
+  );
+});
+
+ipcMain.on(
+  Channels.SEARCH_DOWNLOAD_ITEMS,
+  async (_, [search, filter, order]) => {
+    mainWindow?.webContents?.send(
+      Channels.GET_DOWNLOAD_ITEMS,
+      db.searchItems(search, filter, order)
+    );
+  }
+);
+
+ipcMain.on(Channels.PATCH_DOWNLOAD_ITEMS, async (_, [str]) => {
+  db.patchDownloadItems(str);
+});
+
+ipcMain.on(Channels.PLAYLIST_CONTENTS, async (_, [link]) => {
   server.fetchPlaylistContent(link);
 });
-app.on(Channels.PLAYLIST_CONTENTS, (str) =>
-  mainWindow?.webContents.send(Channels.PLAYLIST_CONTENTS, str)
-);
+
+ipcMain.on(Channels.SEED_VIDEO_SIZE, async (_, [ids]) => {
+  server.seedVideos(ids);
+});
+
+ipcMain.on(Channels.START_VIDEOS_DOWNLOAD, async (_, [ids]) => {
+  server.downloadVideos(ids);
+});

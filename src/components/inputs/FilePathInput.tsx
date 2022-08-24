@@ -17,6 +17,7 @@ const FilePathInput = (props: FilePathInputProps) => {
         borderRadius: props?.radius,
       }}
       className={props.className || ''}
+      onClick={props.onChange}
     >
       <div className="icon">
         <BsFolderFill size={20} color={props?.color || colors.principal} />
@@ -29,6 +30,10 @@ const FilePathInput = (props: FilePathInputProps) => {
       </Text>
     </Wrapper>
   );
+};
+
+FilePathInput.defaultProps = {
+  onChange: () => {},
 };
 
 export default FilePathInput;
@@ -52,6 +57,7 @@ const Wrapper = styled.div`
     cursor: pointer;
   }
   .input {
+    cursor: pointer;
     width: calc(100% - 45px);
     height: 100%;
     display: flex;

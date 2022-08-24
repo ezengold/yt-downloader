@@ -165,6 +165,7 @@ export interface DownloadItemParams {
   id: string;
   playlist_id?: string;
   url?: string;
+  location?: string;
   title: string;
   img?: string | undefined;
   totalSize?: ItemSize;
@@ -222,16 +223,14 @@ export interface AppType {
 }
 
 export interface StoreType {
-  loadingItems: boolean;
   itemsList: DownloadItem[];
   currentItem: DownloadItem | null;
-  loadItems: (
-    search: string,
-    filter: string,
-    order: string,
-    verbose?: boolean
-  ) => Promise<void>;
+  loadItems: (search: string, filter: string, order: string) => Promise<void>;
   viewDetailsOf: (item: DownloadItem) => void;
+  addDownloadItem: (item: DownloadItem) => void;
+
+  downloadLocation: string;
+  updateDownloadLocation: () => void;
 }
 
 export interface MoreButtonProps {

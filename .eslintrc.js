@@ -22,6 +22,7 @@ module.exports = {
     'no-console': 'off',
     'react/no-array-index-key': 'off',
     'react-hooks/exhaustive-deps': 'off',
+    '@typescript-eslint/no-inferrable-types': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

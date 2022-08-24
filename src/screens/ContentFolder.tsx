@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Checkbox, Image, ProgressBar, Text, View } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
+import { useApp } from 'providers/app';
 import { useStore } from 'providers/store';
 import styled from 'styled-components';
 import { IoTrashOutline } from 'react-icons/io5';
@@ -8,14 +9,62 @@ import { BsPlayFill, BsStopFill } from 'react-icons/bs';
 import {
   CANCELED_STATUS,
   COMPLETED_STATUS,
+  MODALS,
   PENDING_STATUS,
   RUNNING_STATUS,
 } from 'configs';
+import { prefeeredSizeOf, prefeeredSpeedOf } from 'helpers';
 
 const ContentFolder = ({ overlayed }) => {
   const { colors } = useTheme();
 
+  const { presentModal } = useApp();
+
   const { currentItem } = useStore();
+
+  const startDownload = () => {
+    //
+  };
+
+  const cancelDownload = () => {
+    //
+  };
+
+  /**
+   * Handle selecting items for deletion
+   */
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleSelectItem = (itemId = '', status = false) => {
+    if (status) {
+      // status is true if in selected id array
+      setSelectedIds((old) => old.filter((id) => id !== itemId));
+    } else {
+      setSelectedIds((old) => [...old, itemId]);
+    }
+  };
+
+  const handleToogleSelectAll = (status = false) => {
+    if (status) {
+      // status is true if next move is to select all
+      setSelectedIds(currentItem?.items.map((el) => el?.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleDeleteItems = () => {
+    presentModal({
+      modalKey: MODALS.CONFIRM_DELETE,
+      modalProps: {
+        title: 'Warning !',
+        message: 'Do you really want to delete the selected items ?',
+      },
+      onHide: (status) => {
+        // perform delete
+      },
+    });
+  };
 
   return (
     <View
@@ -52,26 +101,43 @@ const ContentFolder = ({ overlayed }) => {
               {currentItem?.title}
             </Text>
             <Text size="25px" font={AppFonts.SEMIBOLD} className="mt-2">
-              {currentItem?.currentSpeed?.toPreferredSpeed()?.value}{' '}
-              {currentItem?.currentSpeed?.toPreferredSpeed()?.unit?.title}
+              {prefeeredSpeedOf(currentItem?.currentSpeed)?.value}{' '}
+              {prefeeredSpeedOf(currentItem?.currentSpeed)?.unit?.title}
             </Text>
           </div>
           <div className="d-flex align-items-center justify-content-end">
             <BsStopFill
               size={30}
+              opacity={currentItem?.status === RUNNING_STATUS ? 1 : 0.5}
               color={`${colors.principal}`}
               className="me-4 cursor-pointer"
+              onClick={
+                currentItem?.status === RUNNING_STATUS
+                  ? cancelDownload
+                  : () => {}
+              }
             />
             <BsPlayFill
               size={30}
               color={`${colors.principal}`}
-              opacity={0.5}
+              opacity={
+                [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)
+                  ? 1
+                  : 0.5
+              }
               className="me-4 cursor-pointer"
+              onClick={
+                [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)
+                  ? startDownload
+                  : () => {}
+              }
             />
             <IoTrashOutline
               size={20}
               color={`${colors.red}`}
               className="cursor-pointer"
+              opacity={selectedIds.length > 0 ? 1 : 0.5}
+              onClick={selectedIds.length > 0 ? handleDeleteItems : () => {}}
             />
           </div>
         </div>
@@ -91,7 +157,12 @@ const ContentFolder = ({ overlayed }) => {
                     borderRadius: '5px 0 0 5px',
                   }}
                 >
-                  <Checkbox size={15} color="white" />
+                  <Checkbox
+                    size={15}
+                    color="white"
+                    checked={selectedIds.length === currentItem?.items.length}
+                    onChange={handleToogleSelectAll}
+                  />
                 </th>
                 <th>Insight</th>
                 <th className="text-start">Name</th>
@@ -108,6 +179,8 @@ const ContentFolder = ({ overlayed }) => {
             </thead>
             <tbody>
               {currentItem?.items?.map((item) => {
+                const isChecked = selectedIds.includes(item?.id);
+
                 return (
                   <tr key={item?.id}>
                     <td
@@ -116,7 +189,12 @@ const ContentFolder = ({ overlayed }) => {
                         borderRadius: '5px 0 0 5px',
                       }}
                     >
-                      <Checkbox size={15} color={colors.principal} />
+                      <Checkbox
+                        size={15}
+                        color={colors.principal}
+                        checked={isChecked}
+                        onChange={() => handleSelectItem(item?.id, isChecked)}
+                      />
                     </td>
                     <td>
                       <Image
@@ -129,8 +207,8 @@ const ContentFolder = ({ overlayed }) => {
                     </td>
                     <td className="text-start">{item?.title}</td>
                     <td className="text-start">{`${
-                      item?.speed?.toPreferredSpeed()?.value
-                    } ${item?.speed?.toPreferredSpeed()?.unit?.title}`}</td>
+                      prefeeredSpeedOf(item?.speed)?.value
+                    } ${prefeeredSpeedOf(item?.speed)?.unit?.title}`}</td>
                     <td className="text-start">
                       {item?.status === RUNNING_STATUS ? (
                         <ProgressBar
@@ -160,8 +238,8 @@ const ContentFolder = ({ overlayed }) => {
                       style={{
                         borderRadius: '0 5px 5px 0',
                       }}
-                    >{`${item?.size?.toPreferredSize()?.value} ${
-                      item?.size?.toPreferredSize()?.unit?.title
+                    >{`${prefeeredSizeOf(item?.size)?.value?.toFixed(2)} ${
+                      prefeeredSizeOf(item?.size)?.unit?.title
                     }`}</td>
                   </tr>
                 );

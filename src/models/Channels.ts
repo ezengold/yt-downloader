@@ -1,4 +1,8 @@
 export class Channels {
+  static HOST = '127.0.0.1';
+
+  static PORT = 5678;
+
   /**
    * Connection to socket server succeeded
    */
@@ -14,22 +18,22 @@ export class Channels {
    * The plalist will already be saved in DB, with
    * items that user have selected for download
    */
-  static START_PAYLIST_DOWNLOAD = 'START_PAYLIST_DOWNLOAD';
+  static START_VIDEOS_DOWNLOAD = 'START_VIDEOS_DOWNLOAD';
 
   /**
    * Get a playlist download progression
    */
-  static PLAYLIST_PROGRESSION = 'PLAYLIST_PROGRESSION';
+  static DONWLOAD_PROGRESSION = 'DONWLOAD_PROGRESSION';
 
   /**
    * Cancel a playlist download
    */
-  static CANCEL_PAYLIST_DOWNLOAD = 'CANCEL_PAYLIST_DOWNLOAD';
+  static CANCEL_VIDEOS_DOWNLOAD = 'CANCEL_VIDEOS_DOWNLOAD';
 
   /**
    * Download failed due to unexpected error
    */
-  static PLAYLIST_DOWNLOAD_FAILED = 'PLAYLIST_DOWNLOAD_FAILED';
+  static DOWNLOAD_FAILED = 'DOWNLOAD_FAILED';
 
   /**
    * Get color scheme in user preferences
@@ -55,4 +59,22 @@ export class Channels {
    * Built in ipc example
    */
   static IPC_EXAMPLE = 'ipc-example';
+
+  /**
+   * Channel when error occured
+   */
+  static ERROR_OCCURED = 'ERROR_OCCURED';
+
+  static UNKNOWN_ERROR = 'UNKNOWN_ERROR';
+
+  /**
+   * Download items
+   */
+  static GET_DOWNLOAD_ITEMS = 'GET_DOWNLOAD_ITEMS';
+
+  static SEARCH_DOWNLOAD_ITEMS = 'SEARCH_DOWNLOAD_ITEMS';
+
+  static PATCH_DOWNLOAD_ITEMS = 'PATCH_DOWNLOAD_ITEMS';
+
+  static SEED_VIDEO_SIZE = 'SEED_VIDEO_SIZE';
 }
