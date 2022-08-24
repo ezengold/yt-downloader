@@ -234,3 +234,7 @@ ipcMain.on(Channels.SEED_VIDEO_SIZE, async (_, [ids]) => {
 ipcMain.on(Channels.START_VIDEOS_DOWNLOAD, async (_, [ids]) => {
   server.downloadVideos(ids);
 });
+
+ipcMain.on(Channels.CANCEL_VIDEOS_DOWNLOAD, async (_) => {
+  server.killCurrentDownload();
+});

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ItemProps } from 'types';
-import { ProgressBar, Image, Text, Checkbox } from 'components';
+import { Image, Text, Checkbox } from 'components';
 import { AppFonts, useTheme } from 'providers/theme';
 import styled from 'styled-components';
 import {
@@ -12,6 +12,7 @@ import {
 import { BsCheckAll } from 'react-icons/bs';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { prefeeredSizeOf } from 'helpers';
+import { BiLoaderAlt } from 'react-icons/bi';
 
 const Item = (props: ItemProps) => {
   const { colors } = useTheme();
@@ -31,6 +32,14 @@ const Item = (props: ItemProps) => {
           color={colors.principal}
         />
       </div>
+      {props.item?.status === RUNNING_STATUS && (
+        <BiLoaderAlt
+          size={15}
+          color={colors.principal}
+          style={{ top: 10, right: 10 }}
+          className="position-absolute ezen-indicator"
+        />
+      )}
       <Image
         src={props.item.img}
         height="60px"
@@ -47,13 +56,9 @@ const Item = (props: ItemProps) => {
           {props.item?.title || ''}
         </Text>
         {props.item?.status === RUNNING_STATUS && (
-          <ProgressBar
-            progress={30}
-            className="my-3"
-            radius="5px"
-            foreground={colors.principal}
-            background={colors.background}
-          />
+          <Text color={colors.principal} size={13} className="my-2">
+            {props.item?.status}
+          </Text>
         )}
         {props.item?.status === COMPLETED_STATUS && (
           <Text color={colors.green} size={13} className="my-2">
@@ -96,6 +101,7 @@ const Wrapper = styled.div`
   width: 100%;
   border-radius: 10px;
   padding: 15px;
+  position: relative;
   &:hover {
     background-color: ${({ hoverColor }) => hoverColor || '#000000'}0D;
   }

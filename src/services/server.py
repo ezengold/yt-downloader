@@ -16,7 +16,7 @@ PLAYLIST_CONTENTS = "PLAYLIST_CONTENTS"
 SEED_VIDEO_SIZE = 'SEED_VIDEO_SIZE'
 VIDEO_SIZE_AVAILABLE = 'VIDEO_SIZE_AVAILABLE'
 START_VIDEOS_DOWNLOAD = "START_VIDEOS_DOWNLOAD"
-DONWLOAD_PROGRESSION = "DONWLOAD_PROGRESSION"
+DOWNLOAD_PROGRESSION = "DOWNLOAD_PROGRESSION"
 
 # download progression status
 DOWNLOAD_FAILED = "DOWNLOAD_FAILED"
@@ -40,9 +40,7 @@ async def connection():
 async def get_playlist_contents():
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         playlist_link = args[2]
-
         playlist = Playlist(playlist_link)
-
         output = {
             "playlist_id": playlist.playlist_id,
             "playlist_url": playlist.playlist_url,
@@ -51,13 +49,11 @@ async def get_playlist_contents():
             "owner": playlist.owner,
             "videos": []
         }
-
         for video in playlist.videos:
             video_details = video.vid_info['videoDetails']
             # description contains not escaped characters
             del video_details["shortDescription"]
             output["videos"].append(video_details)
-
         await websocket.send(json.dumps({
             "topic": PLAYLIST_CONTENTS,
             "value": output,
@@ -76,7 +72,7 @@ async def videos_seeding():
                 "video_id": video_id,
                 "video_size": video_size
             })
-        websocket.send(json.dumps({
+        await websocket.send(json.dumps({
             "topic": SEED_VIDEO_SIZE,
             "value": output,
             "success": True
@@ -86,7 +82,7 @@ async def videos_seeding():
 async def on_video_download_progressing(stream: Stream, chunk: bytes, bytes_remaining: int, video_id):
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
-            "topic": DONWLOAD_PROGRESSION,
+            "topic": DOWNLOAD_PROGRESSION,
             "value": {
                 "video_id": video_id,
                 "status": DOWNLOAD_PROCESSING,
@@ -101,7 +97,7 @@ async def on_video_download_progressing(stream: Stream, chunk: bytes, bytes_rema
 async def on_video_download_start(video_id: str):
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
-            "topic": DONWLOAD_PROGRESSION,
+            "topic": DOWNLOAD_PROGRESSION,
             "value": {
                 "video_id": video_id,
                 "status": DOWNLOAD_PROCESSING,
@@ -113,10 +109,10 @@ async def on_video_download_start(video_id: str):
         }, default=str))
 
 
-async def on_video_download_completed(file_path: str, video_id: str):
+async def on_video_download_completed(stream: Stream, file_path: str, video_id: str):
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
-            "topic": DONWLOAD_PROGRESSION,
+            "topic": DOWNLOAD_PROGRESSION,
             "value": {
                 "video_id": video_id,
                 "status": DOWNLOAD_FINISHED,
@@ -130,7 +126,7 @@ async def on_video_download_completed(file_path: str, video_id: str):
 async def on_video_download_failed(video_id):
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
-            "topic": DONWLOAD_PROGRESSION,
+            "topic": DOWNLOAD_PROGRESSION,
             "value": {
                 "video_id": video_id,
                 "status": DOWNLOAD_FAILED,
@@ -141,48 +137,55 @@ async def on_video_download_failed(video_id):
         }, default=str))
 
 
-async def on_all_videos_download_finished():
+async def on_all_videos_download_finished(status: str = DOWNLOAD_FINISHED, error: str = ""):
     async with websockets.connect("ws://%s:%d" % (WSS_HOST, WSS_PORT)) as websocket:
         await websocket.send(json.dumps({
             "topic": START_VIDEOS_DOWNLOAD,
             "value": {
-                "status": DOWNLOAD_FINISHED,
-                "error": ""
+                "status": status,
+                "error": error
             },
-            "success": True
+            "success": False if status == DOWNLOAD_FAILED else True
         }, default=str))
 
 
 def start_videos_download():
-    # videos = {video_id: str, location: str}[]
-    videos = json.loads(args[2])
-    for video in videos:
-        video_id = video['video_id']
-        video_location = video['location']
-        yt_video = YouTube(
-            f"https://youtube.com/watch?v={video_id}",
-            on_progress_callback=lambda stream, chunk, bytes_remaining: asyncio.run(on_video_download_progressing(
-                stream,
-                chunk,
-                bytes_remaining,
-                video_id=video_id
-            )),
-            on_complete_callback=lambda file_path: asyncio.run(on_video_download_completed(
-                file_path,
-                video_id=video_id
-            ))
-        )
-        video_title = yt_video.title.replace("/", "_")
-        yt_video_stream: Stream = yt_video.streams.last()
-        if yt_video_stream != None:
+    try:
+        # videos = {video_id: str, location: str}[]
+        videos = json.loads(args[2])
+        for video in videos:
+            video_id = video['video_id']
+            video_location = video['location']
             asyncio.run(on_video_download_start(video_id))
-            yt_video_stream.download(
-                output_path=video_location,
-                filename=f"{video_title}.mp4",
+            yt_video = YouTube(
+                url=f"https://youtube.com/watch?v={video_id}",
+                on_progress_callback=lambda stream, chunk, bytes_remaining: asyncio.run(on_video_download_progressing(
+                    stream,
+                    chunk,
+                    bytes_remaining,
+                    video_id=video_id
+                )),
+                on_complete_callback=lambda stream, file_path: asyncio.run(on_video_download_completed(
+                    stream=stream,
+                    file_path=file_path,
+                    video_id=video_id
+                ))
             )
-        else:
-            asyncio.run(on_video_download_failed(video_id))
-    asyncio.run(on_all_videos_download_finished())
+            video_title = yt_video.title.replace("/", "_")
+            yt_video_stream: Stream = yt_video.streams.last()
+            if yt_video_stream != None:
+                yt_video_stream.download(
+                    output_path=video_location,
+                    filename=f"{video_title}.mp4",
+                )
+            else:
+                asyncio.run(on_video_download_failed(video_id))
+        asyncio.run(on_all_videos_download_finished())
+    except:
+        asyncio.run(on_all_videos_download_finished(
+            status=DOWNLOAD_FAILED,
+            error="Download failed"
+        ))
 
 
 def main():

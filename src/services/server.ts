@@ -54,9 +54,9 @@ export class MainServer {
             );
             break;
 
-          case Channels.DONWLOAD_PROGRESSION:
+          case Channels.DOWNLOAD_PROGRESSION:
             this.mainWindow?.webContents?.send(
-              Channels.DONWLOAD_PROGRESSION,
+              Channels.DOWNLOAD_PROGRESSION,
               JSON.stringify(response)
             );
             break;
@@ -145,7 +145,17 @@ export class MainServer {
         },
       }
     );
+
+    this.server = pythonServer;
     this.handleProcess(pythonServer);
+  }
+
+  killCurrentDownload() {
+    if (this.server) {
+      this.server?.stdin.destroy();
+      this.server?.stdout.destroy();
+      if (this.server?.kill('SIGKILL')) console.log('DOWNLOAD TASK KILLED');
+    }
   }
 
   handleProcess(process: ChildProcessWithoutNullStreams) {

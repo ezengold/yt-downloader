@@ -23,7 +23,7 @@ export class Channels {
   /**
    * Get a playlist download progression
    */
-  static DONWLOAD_PROGRESSION = 'DONWLOAD_PROGRESSION';
+  static DOWNLOAD_PROGRESSION = 'DOWNLOAD_PROGRESSION';
 
   /**
    * Cancel a playlist download
@@ -31,9 +31,13 @@ export class Channels {
   static CANCEL_VIDEOS_DOWNLOAD = 'CANCEL_VIDEOS_DOWNLOAD';
 
   /**
-   * Download failed due to unexpected error
+   * Download status
    */
   static DOWNLOAD_FAILED = 'DOWNLOAD_FAILED';
+
+  static DOWNLOAD_FINISHED = 'DOWNLOAD_FINISHED';
+
+  static DOWNLOAD_PROCESSING = 'DOWNLOAD_PROCESSING';
 
   /**
    * Get color scheme in user preferences

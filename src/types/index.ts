@@ -229,6 +229,11 @@ export interface StoreType {
   viewDetailsOf: (item: DownloadItem) => void;
   addDownloadItem: (item: DownloadItem) => void;
 
+  performDownload: (itemId: string) => void;
+  stopDownload: (itemId: string) => void;
+  deleteDownloadItems: (itemsIds: string[]) => void;
+  deleteItemVideos: (itemId: string, subItemsIds: string[]) => void;
+
   downloadLocation: string;
   updateDownloadLocation: () => void;
 }

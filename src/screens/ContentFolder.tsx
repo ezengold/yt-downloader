@@ -20,14 +20,19 @@ const ContentFolder = ({ overlayed }) => {
 
   const { presentModal } = useApp();
 
-  const { currentItem } = useStore();
+  const { currentItem, performDownload, stopDownload, deleteItemVideos } =
+    useStore();
 
   const startDownload = () => {
-    //
+    if ([PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)) {
+      performDownload(currentItem?.id);
+    }
   };
 
   const cancelDownload = () => {
-    //
+    if (currentItem?.status === RUNNING_STATUS) {
+      stopDownload(currentItem?.id);
+    }
   };
 
   /**
@@ -61,7 +66,7 @@ const ContentFolder = ({ overlayed }) => {
         message: 'Do you really want to delete the selected items ?',
       },
       onHide: (status) => {
-        // perform delete
+        deleteItemVideos(currentItem?.id, selectedIds);
       },
     });
   };
@@ -90,7 +95,7 @@ const ContentFolder = ({ overlayed }) => {
       >
         <div
           style={{ marginLeft: '200px', width: 'calc(100% - 200px)' }}
-          className="d-flex align-items-start justify-content-between mb-5"
+          className="d-flex align-items-start justify-content-between mb-3"
         >
           <div className="w-75 d-flex flex-column">
             <Text
@@ -100,8 +105,18 @@ const ContentFolder = ({ overlayed }) => {
             >
               {currentItem?.title}
             </Text>
+            <View className="w-100 d-flex flex-wrap align-items-center mt-2">
+              <Text
+                color={colors.yellow}
+                font={AppFonts.MEDIUM}
+                className="me-5"
+              >
+                {currentItem?.items?.length} videos
+              </Text>
+              <Text>Saved at : {currentItem?.location || '-'}</Text>
+            </View>
             <Text size="25px" font={AppFonts.SEMIBOLD} className="mt-2">
-              {prefeeredSpeedOf(currentItem?.currentSpeed)?.value}{' '}
+              {prefeeredSpeedOf(currentItem?.currentSpeed)?.value?.toFixed(0)}{' '}
               {prefeeredSpeedOf(currentItem?.currentSpeed)?.unit?.title}
             </Text>
           </div>
@@ -111,11 +126,7 @@ const ContentFolder = ({ overlayed }) => {
               opacity={currentItem?.status === RUNNING_STATUS ? 1 : 0.5}
               color={`${colors.principal}`}
               className="me-4 cursor-pointer"
-              onClick={
-                currentItem?.status === RUNNING_STATUS
-                  ? cancelDownload
-                  : () => {}
-              }
+              onClick={cancelDownload}
             />
             <BsPlayFill
               size={30}
@@ -126,11 +137,7 @@ const ContentFolder = ({ overlayed }) => {
                   : 0.5
               }
               className="me-4 cursor-pointer"
-              onClick={
-                [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)
-                  ? startDownload
-                  : () => {}
-              }
+              onClick={startDownload}
             />
             <IoTrashOutline
               size={20}
@@ -151,22 +158,31 @@ const ContentFolder = ({ overlayed }) => {
           <table>
             <thead>
               <tr>
+                {currentItem?.status !== RUNNING_STATUS && (
+                  <th
+                    style={{
+                      width: '50px',
+                      borderRadius: '5px 0 0 5px',
+                    }}
+                  >
+                    <Checkbox
+                      size={15}
+                      color="white"
+                      checked={selectedIds.length === currentItem?.items.length}
+                      onChange={handleToogleSelectAll}
+                    />
+                  </th>
+                )}
                 <th
-                  style={{
-                    width: '50px',
-                    borderRadius: '5px 0 0 5px',
-                  }}
+                  style={
+                    currentItem?.status === RUNNING_STATUS
+                      ? { borderRadius: '5px 0 0 5px' }
+                      : {}
+                  }
                 >
-                  <Checkbox
-                    size={15}
-                    color="white"
-                    checked={selectedIds.length === currentItem?.items.length}
-                    onChange={handleToogleSelectAll}
-                  />
+                  Insight
                 </th>
-                <th>Insight</th>
                 <th className="text-start">Name</th>
-                <th className="text-start">Speed</th>
                 <th className="text-start">Status</th>
                 <th
                   style={{
@@ -183,20 +199,28 @@ const ContentFolder = ({ overlayed }) => {
 
                 return (
                   <tr key={item?.id}>
+                    {currentItem?.status !== RUNNING_STATUS && (
+                      <td
+                        style={{
+                          width: '50px',
+                          borderRadius: '5px 0 0 5px',
+                        }}
+                      >
+                        <Checkbox
+                          size={15}
+                          color={colors.principal}
+                          checked={isChecked}
+                          onChange={() => handleSelectItem(item?.id, isChecked)}
+                        />
+                      </td>
+                    )}
                     <td
-                      style={{
-                        width: '50px',
-                        borderRadius: '5px 0 0 5px',
-                      }}
+                      style={
+                        currentItem?.status === RUNNING_STATUS
+                          ? { borderRadius: '5px 0 0 5px' }
+                          : {}
+                      }
                     >
-                      <Checkbox
-                        size={15}
-                        color={colors.principal}
-                        checked={isChecked}
-                        onChange={() => handleSelectItem(item?.id, isChecked)}
-                      />
-                    </td>
-                    <td>
                       <Image
                         src={item?.img}
                         height="40px"
@@ -206,13 +230,17 @@ const ContentFolder = ({ overlayed }) => {
                       />
                     </td>
                     <td className="text-start">{item?.title}</td>
-                    <td className="text-start">{`${
-                      prefeeredSpeedOf(item?.speed)?.value
-                    } ${prefeeredSpeedOf(item?.speed)?.unit?.title}`}</td>
                     <td className="text-start">
                       {item?.status === RUNNING_STATUS ? (
                         <ProgressBar
-                          progress={20}
+                          progress={
+                            item?.currentSize?.value <= item?.size?.value
+                              ? (
+                                  (item?.currentSize?.value * 100) /
+                                  item?.size?.value
+                                ).toFixed(0)
+                              : 100
+                          }
                           width="150px"
                           background="transparent"
                           foreground={colors.principal}

@@ -7,14 +7,20 @@ import { useStore } from 'providers/store';
 
 import { IoTrashOutline } from 'react-icons/io5';
 import { AiOutlineSearch } from 'react-icons/ai';
-import { FILTER, MODALS, ORDER } from 'configs';
+import { FILTER, MODALS, ORDER, RUNNING_STATUS } from 'configs';
 import styled from 'styled-components';
 import { BsPlusCircle } from 'react-icons/bs';
 
 const Aside = ({ overlayed }) => {
   const { colors } = useTheme();
 
-  const { loadItems, viewDetailsOf, currentItem, itemsList } = useStore();
+  const {
+    loadItems,
+    viewDetailsOf,
+    currentItem,
+    itemsList,
+    deleteDownloadItems,
+  } = useStore();
 
   const { presentModal } = useApp();
 
@@ -73,7 +79,11 @@ const Aside = ({ overlayed }) => {
   const handleToogleSelectAll = (status = false) => {
     if (status) {
       // status is true if next move is to select all
-      setSelectedIds(itemsList.map((el) => el?.id));
+      setSelectedIds(
+        itemsList
+          ?.filter((el) => el?.status !== RUNNING_STATUS)
+          .map((el) => el?.id)
+      );
     } else {
       setSelectedIds([]);
     }
@@ -87,6 +97,7 @@ const Aside = ({ overlayed }) => {
         message: 'Do you really want to delete the selected items ?',
       },
       onHide: (status) => {
+        deleteDownloadItems(selectedIds);
         handleSelection();
       },
     });
@@ -155,7 +166,10 @@ const Aside = ({ overlayed }) => {
               size={16}
               color={colors?.principal}
               style={{ marginLeft: '15px' }}
-              checked={selectedIds.length === itemsList.length}
+              checked={
+                selectedIds.length ===
+                itemsList?.filter((el) => el?.status !== RUNNING_STATUS).length
+              }
               onChange={handleToogleSelectAll}
             />
           )}
@@ -176,7 +190,7 @@ const Aside = ({ overlayed }) => {
                 item={item}
                 isActive={item.id === currentItem?.id}
                 isSelected={isChecked}
-                isSelectable={selecting}
+                isSelectable={selecting && item.status !== RUNNING_STATUS}
                 onClick={() => viewDetailsOf(item)}
                 onSelect={() => handleSelectItem(item?.id, isChecked)}
               />

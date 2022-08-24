@@ -150,6 +150,7 @@ const NewDownload = () => {
         if (Array.isArray(response?.value)) {
           const updatedItem: DownloadItem = {
             ...item,
+            location: downloadLocation,
             items: item?.items?.map((el) => {
               const current = response?.value?.find(
                 (s: any) => s?.video_id === el?.video_id
@@ -196,7 +197,7 @@ const NewDownload = () => {
         presentAlert({ kind: 'error', message: response?.value as string });
       }
     },
-    [item]
+    [item, downloadLocation]
   );
 
   useEffect(() => {
@@ -317,7 +318,7 @@ const NewDownload = () => {
                     font={AppFonts.BOLD}
                     className="ms-1 me-4"
                   >
-                    {item?.owner || '-'}
+                    {item?.items?.length || '0'}
                   </Text>
                   {showSizes && (
                     <>
