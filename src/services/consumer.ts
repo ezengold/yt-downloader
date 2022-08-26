@@ -99,6 +99,8 @@ export class MainServer {
   }
 
   connectServer() {
+    console.log(this.resolveScript(this.getPlatformServerScriptName()));
+
     const pythonServer = spawn(
       this.resolveScript(this.getPlatformServerScriptName()),
       [],
