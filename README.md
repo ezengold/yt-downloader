@@ -9,6 +9,9 @@ This app let you download any youtube playlist
 - Support `light/dark` theme
 - Flexibility to change theme colors
 
+https://user-images.githubusercontent.com/58929033/187002393-5d430278-8836-4fbc-b33f-056b2ae1bd3b.mp4
+
+
 ## Next to come
 
 - Support single videos download
