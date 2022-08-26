@@ -3,6 +3,7 @@ import { StoreType } from 'types';
 import {
   CANCELED_STATUS,
   COMPLETED_STATUS,
+  EXPIRED_STATUS,
   FILTER,
   ORDER,
   PENDING_STATUS,
@@ -24,7 +25,7 @@ import moment from 'moment';
 const StoreContext = React.createContext<StoreType>({});
 
 const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const { presentAlert } = useApp();
+  const { presentAlert, modalShown } = useApp();
 
   /**
    * DOWNLOAD LOCATION
@@ -52,32 +53,58 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const onLoadItems = (itemsStr?: string) => {
     try {
-      const data = JSON.parse(itemsStr as string);
-      setItems(
-        Array.isArray(data)
-          ? data?.map((el) =>
-              [RUNNING_STATUS, PENDING_STATUS].includes(el?.status)
-                ? {
-                    ...el,
-                    status: CANCELED_STATUS,
-                    error: 'Download canceled',
-                    currentSpeed: new ItemSpeed(0, SpeedUnit.BS),
-                    items: el?.items?.map((sub) =>
-                      sub?.status !== COMPLETED_STATUS
-                        ? {
-                            ...sub,
-                            status: CANCELED_STATUS,
-                            error: 'Download canceled',
-                            currentSize: new ItemSize(0, SizeUnit.BYTES),
-                          }
-                        : sub
-                    ),
-                  }
-                : el
-            )
-          : []
+      let data: DownloadItem[] = JSON.parse(itemsStr as string);
+
+      // check expired links
+      data = Array.isArray(data)
+        ? data.map((it) => ({
+            ...it,
+            items: Array.isArray(it?.items)
+              ? it?.items?.map((sub) => ({
+                  ...sub,
+                  status:
+                    !!sub?.download_url &&
+                    moment(sub?.expires_at).isAfter(moment())
+                      ? sub?.status
+                      : EXPIRED_STATUS,
+                }))
+              : [],
+          }))
+        : [];
+
+      // items with only expired and completed subitems will come completed
+      data = data?.map((it) => ({
+        ...it,
+        status: it?.items?.some(
+          (sub) => ![COMPLETED_STATUS, EXPIRED_STATUS].includes(sub?.status)
+        )
+          ? it?.status
+          : COMPLETED_STATUS,
+      }));
+
+      // all pending and running items on loading come canceled
+      data = data?.map((it) =>
+        [RUNNING_STATUS, PENDING_STATUS].includes(it?.status)
+          ? {
+              ...it,
+              status: CANCELED_STATUS,
+              error: 'Download canceled',
+              currentSpeed: new ItemSpeed(0, SpeedUnit.BS),
+              items: it?.items?.map((sub) =>
+                ![COMPLETED_STATUS, EXPIRED_STATUS].includes(sub?.status)
+                  ? {
+                      ...sub,
+                      status: CANCELED_STATUS,
+                      error: 'Download canceled',
+                      currentSize: new ItemSize(0, SizeUnit.BYTES),
+                    }
+                  : sub
+              ),
+            }
+          : it
       );
-      setNextDownloadItemsIds([]);
+
+      setItems(data);
     } catch (error) {
       // ignore
     }
@@ -107,56 +134,54 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [downloadingItem, setDownloadingItem] = useState<?DownloadItem>(null);
 
-  const [nextDownloadItemsIds, setNextDownloadItemsIds] = useState<string[]>(
-    []
-  );
-
-  const removeFromNextDownloads = (itemId) =>
-    setNextDownloadItemsIds((old) => old?.filter((el) => el !== itemId));
-
   const viewDetailsOf = (item: DownloadItem) => {
     setCurrentItem((old) => (old?.id === item?.id ? null : item));
   };
 
-  const addNewPlaylist = (item: DownloadItem) => {
-    if (canStartNewDownload(item?.id)) {
-      const updated = {
-        ...item,
-        status: RUNNING_STATUS,
-      };
-      const updatedItems = [...items, updated];
-      setCurrentItem(updated);
-      setDownloadingItem(updated);
-      setItems(updatedItems);
-      window.electron.ipcRenderer.sendMessage(Channels.START_VIDEOS_DOWNLOAD, [
-        JSON.stringify(
-          updated?.items
-            ?.filter((el) =>
-              [PENDING_STATUS, CANCELED_STATUS].includes(el?.status)
-            )
-            ?.map((el) => ({
-              video_id: el?.video_id,
-              download_url: el?.download_url,
-              location: `${updated?.location}/${el?.title?.replaceAll(
-                '/',
-                '_'
-              )}.mp4`,
-            }))
-        ),
-      ]);
-    } else {
-      const updatedItems = [...items, item];
-      setItems(updatedItems);
-      setCurrentItem(item);
-    }
-  };
+  const addNewPlaylist = React.useCallback(
+    (item: DownloadItem) => {
+      if (canStartNewDownload(item?.id)) {
+        const updated = {
+          ...item,
+          status: RUNNING_STATUS,
+        };
+        const updatedItems = [...items, updated];
+        setCurrentItem(updated);
+        setDownloadingItem(updated);
+        setItems(updatedItems);
+
+        window.electron.ipcRenderer.sendMessage(
+          Channels.START_VIDEOS_DOWNLOAD,
+          [
+            JSON.stringify(
+              updated?.items
+                ?.filter((el) =>
+                  [PENDING_STATUS, CANCELED_STATUS].includes(el?.status)
+                )
+                ?.map((el) => ({
+                  video_id: el?.video_id,
+                  download_url: el?.download_url,
+                  location: `${updated?.location}/${el?.title?.replaceAll(
+                    /[^a-z0-9]/gi,
+                    '_'
+                  )}.mp4`,
+                }))
+            ),
+          ]
+        );
+      } else {
+        const updatedItems = [...items, item];
+        setItems(updatedItems);
+        setCurrentItem(item);
+      }
+    },
+    [items, downloadingItem, currentItem, modalShown]
+  );
 
   const deleteDownloadItems = (itemsIds: string[]) => {
     // remove eventual downloading item id
     const pureItemsIds = itemsIds.filter((el) => el !== downloadingItem?.id);
-    setNextDownloadItemsIds((old) =>
-      old.filter((id) => !pureItemsIds.includes(id))
-    );
+
     setItems((old) => old.filter((it) => !pureItemsIds.includes(it?.id)));
 
     if (itemsIds.includes(currentItem?.id)) setCurrentItem(null);
@@ -171,6 +196,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     if (itemId !== downloadingItem?.id) {
       // cannot delete items on current downloading item
       const updated = items?.find((el) => el?.id === itemId);
+
       if (updated) {
         updated.items = updated.items?.filter(
           (el) => !subItemsIds?.includes(el?.id)
@@ -185,10 +211,6 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         if (updated.items.length === 0) {
           // remove item
           deleteDownloadItems([itemId]);
-          presentAlert({
-            kind: 'success',
-            message: 'Item removed successfully !',
-          });
         } else {
           if (itemId === currentItem?.id) setCurrentItem(updated);
           setItems((old) =>
@@ -196,7 +218,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           );
           presentAlert({
             kind: 'success',
-            message: 'All videos are successfully deleted !',
+            message: 'All selected videos are successfully deleted !',
           });
         }
       }
@@ -205,21 +227,24 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const canStartNewDownload = React.useCallback(
     (itemId: string) => {
-      console.log({ itemId, downloadingItem });
-
       if (!downloadingItem) {
         return true;
       } else {
-        if (itemId !== downloadingItem?.id) {
+        if (itemId === downloadingItem?.id) {
           presentAlert({
             kind: 'success',
             message: 'Another download is running !',
+          });
+        } else {
+          presentAlert({
+            kind: 'success',
+            message: 'Download already running !',
           });
         }
         return false;
       }
     },
-    [items, nextDownloadItemsIds, currentItem, downloadingItem]
+    [items, currentItem, downloadingItem]
   );
 
   const purifedVideos = (
@@ -238,19 +263,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       // all videos url are valid
       return videos;
     } else if (videos.length > 0 && videos.length - validVideos.length > 0) {
-      // seed expired videos and subscribe for download
-      window.electron.ipcRenderer.sendMessage(Channels.SEED_VIDEO_SIZE, [
-        JSON.stringify(
-          videos
-            ?.filter(
-              (el) =>
-                !(
-                  !!el?.download_url && moment(el?.expires_at).isAfter(moment())
-                )
-            )
-            ?.map((el) => el?.video_id)
-        ),
-      ]);
+      // change status of expired link
       return validVideos;
     } else {
       return [];
@@ -283,7 +296,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
               video_id: el?.video_id || '',
               download_url: el?.download_url,
               location: `${updated?.location}/${el?.title?.replaceAll(
-                '/',
+                /[^a-z0-9]/gi,
                 '_'
               )}.mp4`,
               expires_at: el?.expires_at,
@@ -291,8 +304,20 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
           const videosToDownload = purifedVideos(downloadables);
 
+          // change status of expired items (items not in videosToDownload)
+          updated.items?.map((sub) => ({
+            ...sub,
+            status: videosToDownload?.some(
+              (vid) => vid?.video_id === sub?.video_id
+            )
+              ? sub.status
+              : sub.status === RUNNING_STATUS
+              ? RUNNING_STATUS
+              : EXPIRED_STATUS,
+          }));
+
           if (videosToDownload.length > 0) {
-            updated.status = PENDING_STATUS;
+            updated.status = RUNNING_STATUS;
 
             window.electron.ipcRenderer.sendMessage(
               Channels.START_VIDEOS_DOWNLOAD,
@@ -318,10 +343,14 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     },
-    [items, nextDownloadItemsIds, currentItem, downloadingItem]
+    [items, currentItem, downloadingItem]
   );
 
   const stopDownload = (itemId: string) => {
+    window.electron.ipcRenderer.sendMessage(
+      Channels.CANCEL_VIDEOS_DOWNLOAD,
+      []
+    );
     if (itemId === downloadingItem?.id) setDownloadingItem(null);
     if (currentItem?.id === itemId) {
       const updatedCurrentItem = {
@@ -330,7 +359,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         currentSpeed: new ItemSpeed(0, SpeedUnit.BS),
         error: 'Download canceled',
         items: currentItem?.items?.map((sub) =>
-          sub?.status !== COMPLETED_STATUS
+          ![COMPLETED_STATUS, EXPIRED_STATUS].includes(sub?.status)
             ? {
                 ...sub,
                 currentSize: new ItemSize(0, SizeUnit.BYTES),
@@ -351,7 +380,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
               currentSpeed: new ItemSpeed(0, SpeedUnit.BS),
               error: 'Download canceled',
               items: it?.items?.map((sub) =>
-                sub?.status !== COMPLETED_STATUS
+                ![COMPLETED_STATUS, EXPIRED_STATUS].includes(sub?.status)
                   ? {
                       ...sub,
                       currentSize: new ItemSize(0, SizeUnit.BYTES),
@@ -364,16 +393,10 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           : it
       )
     );
-    window.electron.ipcRenderer.sendMessage(
-      Channels.CANCEL_VIDEOS_DOWNLOAD,
-      []
-    );
   };
 
   const onSubscribedDownloadsEnd = React.useCallback(
     (str?: string) => {
-      console.log({ str });
-
       if (downloadingItem) {
         const response = new Message<any>(str as string);
 
@@ -381,66 +404,35 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           if (response?.value?.status === Channels.DOWNLOAD_FINISHED) {
             const updatedItem = downloadingItem;
 
-            // if items seeded lastly are not downloaded yet
-            const possibleRemainingVideos = updatedItem.items?.filter(
-              (el) => el?.status === PENDING_STATUS
-            );
+            updatedItem.status = COMPLETED_STATUS;
+            updatedItem.currentSpeed = new ItemSpeed(0, SpeedUnit.BS);
 
-            if (possibleRemainingVideos.length > 0) {
-              updatedItem.status = RUNNING_STATUS;
-              updatedItem.currentSpeed = new ItemSpeed(0, SpeedUnit.BS);
-
-              setItems((old) =>
-                old?.map((it) =>
-                  it?.id === downloadingItem?.id ? updatedItem : it
-                )
-              );
-              setDownloadingItem(updatedItem);
-              if (downloadingItem?.id === currentItem?.id)
-                setCurrentItem(updatedItem);
-
-              window.electron.ipcRenderer.sendMessage(
-                Channels.START_VIDEOS_DOWNLOAD,
-                [
-                  JSON.stringify(
-                    possibleRemainingVideos?.map((el) => ({
-                      video_id: el?.video_id,
-                      download_url: el?.download_url,
-                      location: `${
-                        updatedItem?.location
-                      }/${el?.title?.replaceAll('/', '_')}.mp4`,
-                    }))
-                  ),
-                ]
-              );
-            } else {
-              updatedItem.status = COMPLETED_STATUS;
-              updatedItem.currentSpeed = new ItemSpeed(0, SpeedUnit.BS);
-
-              setItems((old) =>
-                old?.map((it) =>
-                  it?.id === updatedItem?.id ? updatedItem : it
-                )
-              );
-              setDownloadingItem(null);
-              if (updatedItem?.id === currentItem?.id)
-                setCurrentItem(updatedItem);
-
-              presentAlert({
-                kind: 'success',
-                message: `Download of "${updatedItem?.title}" finished !`,
-              });
-            }
-          } else {
-            const updatedItem = downloadingItem;
-            updatedItem.status = CANCELED_STATUS;
-            updatedItem.error = response?.value?.error;
-            if (updatedItem?.id === currentItem?.id)
-              setCurrentItem(updatedItem);
             setItems((old) =>
               old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
             );
             setDownloadingItem(null);
+
+            if (updatedItem?.id === currentItem?.id)
+              setCurrentItem(updatedItem);
+
+            presentAlert({
+              kind: 'success',
+              message: `Download of "${updatedItem?.title}" finished !`,
+            });
+          } else {
+            const updatedItem = downloadingItem;
+            updatedItem.status = CANCELED_STATUS;
+            updatedItem.error = response?.value?.error;
+
+            if (updatedItem?.id === currentItem?.id)
+              setCurrentItem(updatedItem);
+
+            setItems((old) =>
+              old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
+            );
+
+            setDownloadingItem(null);
+
             presentAlert({
               kind: 'error',
               message: response?.value?.error as string,
@@ -450,11 +442,15 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
           const updatedItem = downloadingItem;
           updatedItem.status = CANCELED_STATUS;
           updatedItem.error = response?.value?.error;
+
           if (updatedItem?.id === currentItem?.id) setCurrentItem(updatedItem);
+
           setItems((old) =>
             old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
           );
+
           setDownloadingItem(null);
+
           presentAlert({
             kind: 'error',
             message: response?.value?.error as string,
@@ -462,7 +458,7 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     },
-    [items, currentItem, downloadingItem, nextDownloadItemsIds]
+    [items, currentItem, downloadingItem]
   );
 
   const onDownloadsProgressing = React.useCallback(
@@ -470,15 +466,16 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       if (downloadingItem) {
         const response = new Message<any>(str as string);
         const videoId: string = response?.value?.video_id;
-        const downloadStatus: string = response?.value?.status;
 
         if (response?.success) {
           if (response?.value?.status === Channels.DOWNLOAD_PROCESSING) {
             const updatedItem = downloadingItem;
+            // TODO
             updatedItem.currentSpeed = new ItemSpeed(
               parseInt(response?.value?.speed, 10) || 0,
               SpeedUnit.BS
             );
+
             updatedItem.items = updatedItem.items?.map((el) =>
               el?.video_id === videoId
                 ? {
@@ -495,18 +492,18 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
                   }
                 : el
             );
+
             setDownloadingItem(updatedItem);
+
             if (updatedItem?.id === currentItem?.id)
               setCurrentItem(updatedItem);
+
             setItems((old) =>
-              old?.map((it) =>
-                it?.id === downloadingItem?.id ? updatedItem : it
-              )
+              old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
             );
           } else if (response?.value?.status === Channels.DOWNLOAD_FINISHED) {
-            console.log({ response });
-
             const updatedItem = downloadingItem;
+
             updatedItem.items = updatedItem.items?.map((el) =>
               el?.video_id === videoId
                 ? {
@@ -517,16 +514,18 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
                   }
                 : el
             );
+
             setDownloadingItem(updatedItem);
+
             if (updatedItem?.id === currentItem?.id)
               setCurrentItem(updatedItem);
+
             setItems((old) =>
-              old?.map((it) =>
-                it?.id === downloadingItem?.id ? updatedItem : it
-              )
+              old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
             );
           } else if (response?.value?.status === Channels.DOWNLOAD_FAILED) {
             const updatedItem = downloadingItem;
+
             updatedItem.items = updatedItem.items?.map((el) =>
               el?.video_id === videoId
                 ? {
@@ -537,93 +536,50 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
                   }
                 : el
             );
+
             setDownloadingItem(updatedItem);
-            if (downloadingItem?.id === currentItem?.id)
+
+            if (updatedItem?.id === currentItem?.id)
               setCurrentItem(updatedItem);
+
             setItems((old) =>
-              old?.map((it) =>
-                it?.id === downloadingItem?.id ? updatedItem : it
-              )
+              old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
             );
           }
         } else {
-          if (downloadStatus === Channels.DOWNLOAD_FAILED) {
-            const updatedItem = downloadingItem;
-            updatedItem.items = updatedItem.items?.map((el) =>
-              el?.video_id === videoId
-                ? {
-                    ...el,
-                    status: CANCELED_STATUS,
-                    error: response?.value?.error || 'Unexpected error occured',
-                    speed: new ItemSpeed(0, SpeedUnit.BS),
-                  }
-                : el
-            );
-            setDownloadingItem(updatedItem);
-            if (downloadingItem?.id === currentItem?.id)
-              setCurrentItem(updatedItem);
-            setItems((old) =>
-              old?.map((it) =>
-                it?.id === downloadingItem?.id ? updatedItem : it
-              )
-            );
-          }
+          const updatedItem = downloadingItem;
+
+          updatedItem.items = updatedItem.items?.map((el) =>
+            el?.video_id === videoId
+              ? {
+                  ...el,
+                  status: CANCELED_STATUS,
+                  error:
+                    typeof response?.value?.error === 'string'
+                      ? response?.value?.error || 'Unexpected error occured'
+                      : 'Unexpected error occured',
+                  speed: new ItemSpeed(0, SpeedUnit.BS),
+                }
+              : el
+          );
+
+          setDownloadingItem(updatedItem);
+
+          if (updatedItem?.id === currentItem?.id) setCurrentItem(updatedItem);
+
+          setItems((old) =>
+            old?.map((it) => (it?.id === updatedItem?.id ? updatedItem : it))
+          );
         }
       }
     },
-    [items, downloadingItem, nextDownloadItemsIds]
-  );
-
-  const onVideosSeeded = React.useCallback(
-    (str?: string) => {
-      if (downloadingItem) {
-        const response = new Message<any>(str as string);
-
-        if (response?.success) {
-          if (Array.isArray(response?.value)) {
-            const updatedItem: DownloadItem = {
-              ...downloadingItem,
-              items: downloadingItem?.items?.map((el) => {
-                const current = response?.value?.find(
-                  (s: any) => s?.video_id === el?.video_id
-                );
-
-                return current
-                  ? {
-                      ...el,
-                      size: new ItemSize(
-                        current?.video_size || 0,
-                        SizeUnit.BYTES
-                      ),
-                      download_url: current?.download_url,
-                      expires_at: current?.expires_at,
-                      status: PENDING_STATUS,
-                    }
-                  : el;
-              }),
-            };
-
-            updatedItem.totalSize = new ItemSize(
-              updatedItem?.items?.reduce(
-                (prev, current) => prev + current?.size?.value,
-                0
-              ),
-              SizeUnit.BYTES
-            );
-
-            setDownloadingItem(updatedItem);
-
-            if (downloadingItem?.id === currentItem?.id)
-              setCurrentItem(updatedItem);
-          }
-        }
-      }
-    },
-    [items, downloadingItem, currentItem, nextDownloadItemsIds]
+    [items, downloadingItem, currentItem]
   );
 
   useEffect(() => {
     handleFetchLocation();
+    setDownloadingItem(null);
+    setCurrentItem(null);
     window.electron.ipcRenderer.on(
       Channels.GET_DEFAULT_DOWNLOAD_LOCATION,
       (path) => setDownloadLocation((path as string) || '')
@@ -640,7 +596,6 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       onDownloadsProgressing
     );
     window.electron.ipcRenderer.on(Channels.GET_DOWNLOAD_ITEMS, onLoadItems);
-    window.electron.ipcRenderer.on(Channels.SEED_VIDEO_SIZE, onVideosSeeded);
     return () => {
       window.electron.ipcRenderer.removeAllListeners(
         Channels.GET_DOWNLOAD_ITEMS
@@ -651,9 +606,8 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       window.electron.ipcRenderer.removeAllListeners(
         Channels.DOWNLOAD_PROGRESSION
       );
-      window.electron.ipcRenderer?.removeAllListeners(Channels.SEED_VIDEO_SIZE);
     };
-  }, [items, downloadingItem, currentItem, nextDownloadItemsIds]);
+  }, [items, downloadingItem, currentItem, modalShown]);
 
   return (
     <StoreContext.Provider
@@ -666,8 +620,6 @@ const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
         performDownload,
         stopDownload,
-        queue: nextDownloadItemsIds,
-        deQueue: removeFromNextDownloads,
 
         deleteDownloadItems,
         deleteItemVideos,

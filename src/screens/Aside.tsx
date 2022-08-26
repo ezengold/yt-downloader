@@ -20,7 +20,6 @@ const Aside = ({ overlayed }) => {
     currentItem,
     itemsList,
     deleteDownloadItems,
-    queue,
   } = useStore();
 
   const { presentModal } = useApp();
@@ -191,7 +190,6 @@ const Aside = ({ overlayed }) => {
                 key={item.id}
                 item={item}
                 isActive={item.id === currentItem?.id}
-                inQueue={queue?.includes(item?.id)}
                 isSelected={isChecked}
                 isSelectable={selecting && item.status !== RUNNING_STATUS}
                 onClick={() => viewDetailsOf(item)}

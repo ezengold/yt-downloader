@@ -21,19 +21,11 @@ const ContentFolder = ({ overlayed }) => {
 
   const { presentModal } = useApp();
 
-  const {
-    currentItem,
-    performDownload,
-    stopDownload,
-    deleteItemVideos,
-    queue,
-  } = useStore();
+  const { currentItem, performDownload, stopDownload, deleteItemVideos } =
+    useStore();
 
   const startDownload = () => {
-    if (
-      [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status) &&
-      !queue.includes(currentItem?.id)
-    ) {
+    if ([PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)) {
       performDownload(currentItem?.id);
     }
   };
@@ -161,9 +153,7 @@ const ContentFolder = ({ overlayed }) => {
               size={30}
               color={`${colors.principal}`}
               opacity={
-                [PENDING_STATUS, CANCELED_STATUS].includes(
-                  currentItem?.status
-                ) && !queue.includes(currentItem?.id)
+                [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)
                   ? 1
                   : 0.5
               }

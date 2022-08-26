@@ -33,14 +33,6 @@ const Item = (props: ItemProps) => {
           color={colors.principal}
         />
       </div>
-      {props.inQueue && (
-        <AiOutlineCloudDownload
-          size={15}
-          color={colors.yellow}
-          style={{ top: 10, right: 10 }}
-          className="position-absolute"
-        />
-      )}
       {props.item?.status === RUNNING_STATUS && (
         <BiLoaderAlt
           size={15}

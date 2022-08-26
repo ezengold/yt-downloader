@@ -164,12 +164,13 @@ export class MainServer {
 
       if (!response?.success) {
         if (response?.topic === Channels.UNKNOWN_ERROR) {
-          console.log({ data: data?.toString() });
+          // console.log({ data: data?.toString() });
           this.mainWindow?.webContents.send(
             'openAlert',
             'An unexpected error occured !'
           );
         } else {
+          // console.log({ data: data?.toString() });
           this.mainWindow?.webContents.send('openAlert', response?.value);
         }
       }

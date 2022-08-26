@@ -29,6 +29,7 @@ module.exports = {
     'no-await-in-loop': 'off',
     'no-restricted-syntax': 'off',
     'consistent-return': 'off',
+    'promise/always-return': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

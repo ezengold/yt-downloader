@@ -185,7 +185,6 @@ export interface ItemProps {
   isActive?: boolean;
   isSelected?: boolean;
   isSelectable?: boolean;
-  inQueue?: boolean;
   className?: string;
   style?: object;
   onClick?: () => void;
@@ -234,8 +233,6 @@ export interface StoreType {
 
   performDownload: (itemId: string) => void;
   stopDownload: (itemId: string) => void;
-  queue: string[];
-  deQueue: (itemId: string) => void;
 
   deleteDownloadItems: (itemsIds: string[]) => void;
   deleteItemVideos: (itemId: string, subItemsIds: string[]) => void;

@@ -92,7 +92,9 @@ const downloadVideo = (videoId, url, path) => {
                 success: true,
               })
             );
-          resolve();
+          setTimeout(() => {
+            resolve();
+          }, 1000);
         });
       })
       .on('error', (err) => {
