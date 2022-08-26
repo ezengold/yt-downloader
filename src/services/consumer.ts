@@ -1,5 +1,6 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { BrowserWindow } from 'electron';
+import path from 'path';
 import WebSocket, { WebSocketServer } from 'ws';
 import { Channels, Message } from '../models';
 
@@ -98,11 +99,15 @@ export class MainServer {
   }
 
   connectServer() {
-    const pythonServer = spawn('python3', [`${__dirname}/server.py`], {
-      env: {
-        PATH: process.env.PATH,
-      },
-    });
+    const pythonServer = spawn(
+      this.resolveScript(this.getPlatformServerScriptName()),
+      [],
+      {
+        env: {
+          PATH: process.env.PATH,
+        },
+      }
+    );
 
     pythonServer.stderr.on('error', (error) => {
       this.mainWindow?.webContents?.send('openAlert', error?.message);
@@ -111,8 +116,8 @@ export class MainServer {
 
   fetchPlaylistContent(link: string) {
     const pythonServer = spawn(
-      'python3',
-      [`${__dirname}/server.py`, Channels.PLAYLIST_CONTENTS, link],
+      this.resolveScript(this.getPlatformServerScriptName()),
+      [Channels.PLAYLIST_CONTENTS, link],
       {
         env: {
           PATH: process.env.PATH,
@@ -124,8 +129,8 @@ export class MainServer {
 
   seedVideos(videoIds: string) {
     const pythonServer = spawn(
-      'python3',
-      [`${__dirname}/server.py`, Channels.SEED_VIDEO_SIZE, videoIds],
+      this.resolveScript(this.getPlatformServerScriptName()),
+      [Channels.SEED_VIDEO_SIZE, videoIds],
       {
         env: {
           PATH: process.env.PATH,
@@ -138,7 +143,7 @@ export class MainServer {
   downloadVideos(videoIds: string) {
     const pythonServer = spawn(
       'node',
-      [`${__dirname}/downloader.js`, videoIds],
+      [this.resolveScript('downloader.js'), videoIds],
       {
         env: {
           PATH: process.env.PATH,
@@ -158,8 +163,8 @@ export class MainServer {
     }
   }
 
-  handleProcess(process: ChildProcessWithoutNullStreams) {
-    process.stdout.on('data', (data) => {
+  handleProcess(theProcess: ChildProcessWithoutNullStreams) {
+    theProcess.stdout.on('data', (data) => {
       const response = this.parseMessage(data);
 
       if (!response?.success) {
@@ -170,18 +175,38 @@ export class MainServer {
             'An unexpected error occured !'
           );
         } else {
-          // console.log({ data: data?.toString() });
           this.mainWindow?.webContents.send('openAlert', response?.value);
         }
       }
     });
 
-    process.stderr.on('error', (error) => {
+    theProcess.stderr.on('error', (error) => {
       // console.log({ error });
       this.mainWindow?.webContents.send(
         'openAlert',
         'An unexpected error occured !'
       );
     });
+  }
+
+  resolveScript(scriptName: string): string {
+    if (process.env.NODE_ENV === 'production') {
+      return path.join(process.resourcesPath, 'cmd', scriptName);
+    } else {
+      return path.join(__dirname, '../cmd', scriptName);
+    }
+  }
+
+  getPlatformServerScriptName(): string {
+    if (process.platform === 'win32') {
+      // windows
+      return 'server-win.exe';
+    } else if (process.platform === 'darwin') {
+      // macOS
+      return 'server-darwin';
+    } else {
+      // linux
+      return 'server-linux';
+    }
   }
 }

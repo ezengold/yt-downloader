@@ -31,4 +31,6 @@ npm-debug.log.*
 yarn.lock
 package-lock.json
 
-src/services/binaries
+src/services/build
+src/services/dist
+src/services/*.spec
