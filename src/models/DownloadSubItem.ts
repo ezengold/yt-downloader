@@ -7,6 +7,10 @@ export class DownloadSubItem {
 
   video_id?: string = '';
 
+  download_url: string = '';
+
+  expires_at: string = '';
+
   title: string;
 
   img: string | undefined;
@@ -30,6 +34,8 @@ export class DownloadSubItem {
   constructor(params: DownloadSubItemParams) {
     this.id = params?.id;
     this.video_id = params?.video_id;
+    this.download_url = params?.download_url;
+    this.expires_at = params?.expires_at;
     this.title = params?.title;
     this.img = params?.img;
     this.size = params?.size;

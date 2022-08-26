@@ -9,7 +9,7 @@ import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { AppDatabase } from '../database';
-import { MainServer } from '../services/server';
+import { MainServer } from '../services/consumer';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { Channels } from '../models';
@@ -28,12 +28,6 @@ class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  // console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -178,7 +172,7 @@ ipcMain.on(
         await dialog
           .showOpenDialog(mainWindow, {
             defaultPath: currentPath || app.getPath('downloads'),
-            properties: ['openDirectory'],
+            properties: ['openDirectory', 'createDirectory'],
           })
           .then((result) => {
             if (!result.canceled) {
@@ -201,6 +195,47 @@ ipcMain.on(
     }
   }
 );
+
+ipcMain.on(
+  Channels.PICK_DOWNLOAD_LOCATION,
+  async (_, [currentPath]: string) => {
+    if (mainWindow) {
+      try {
+        await dialog
+          .showOpenDialog(mainWindow, {
+            defaultPath: currentPath || app.getPath('downloads'),
+            properties: ['openDirectory', 'createDirectory'],
+          })
+          .then((result) => {
+            if (!result.canceled) {
+              mainWindow?.webContents.send(
+                Channels.PICK_DOWNLOAD_LOCATION,
+                result.filePaths[0] || currentPath
+              );
+            }
+          })
+          .catch(() => {
+            mainWindow?.webContents.send(
+              'openAlert',
+              'Unable to resolve a path'
+            );
+          });
+      } catch (error) {
+        mainWindow?.webContents.send('openAlert', 'Unable to resolve a path');
+      }
+    }
+  }
+);
+
+ipcMain.on(Channels.OPEN_A_PATH, async (_, [pathToOpen]) => {
+  if (pathToOpen) {
+    try {
+      shell.openPath(pathToOpen);
+    } catch (error) {
+      mainWindow?.webContents.send('openAlert', 'Unable to open the directory');
+    }
+  }
+});
 
 ipcMain.on(Channels.GET_DOWNLOAD_ITEMS, async (_) => {
   mainWindow?.webContents?.send(

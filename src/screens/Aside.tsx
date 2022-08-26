@@ -20,6 +20,7 @@ const Aside = ({ overlayed }) => {
     currentItem,
     itemsList,
     deleteDownloadItems,
+    queue,
   } = useStore();
 
   const { presentModal } = useApp();
@@ -97,8 +98,9 @@ const Aside = ({ overlayed }) => {
         message: 'Do you really want to delete the selected items ?',
       },
       onHide: (status) => {
-        deleteDownloadItems(selectedIds);
+        if (status === true) deleteDownloadItems(selectedIds);
         handleSelection();
+        setSelectedIds([]);
       },
     });
   };
@@ -189,6 +191,7 @@ const Aside = ({ overlayed }) => {
                 key={item.id}
                 item={item}
                 isActive={item.id === currentItem?.id}
+                inQueue={queue?.includes(item?.id)}
                 isSelected={isChecked}
                 isSelectable={selecting && item.status !== RUNNING_STATUS}
                 onClick={() => viewDetailsOf(item)}

@@ -9,11 +9,11 @@ const ProgressBar = (props: ProgressBarProps) => {
   return (
     <div
       style={{
-        backgroundColor: props.background || colors.background || 'transparent',
+        backgroundColor:
+          `${props.background}26` || `${colors.principal}26` || 'transparent',
         width: props.width || '100%',
         height: props.height || '10px',
         borderRadius: props.radius || 0,
-        border: props.border || `0.5px solid ${props.foreground}`,
         ...props.style,
       }}
       {..._.omit(props, [
@@ -39,6 +39,7 @@ const ProgressBar = (props: ProgressBarProps) => {
           }%`,
           backgroundColor: props.foreground || colors.principal,
           borderRadius: props.radius || 0,
+          transition: 'all 0.2s linear',
         }}
       />
     </div>

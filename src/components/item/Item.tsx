@@ -13,6 +13,7 @@ import { BsCheckAll } from 'react-icons/bs';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { prefeeredSizeOf } from 'helpers';
 import { BiLoaderAlt } from 'react-icons/bi';
+import { AiOutlineCloudDownload } from 'react-icons/ai';
 
 const Item = (props: ItemProps) => {
   const { colors } = useTheme();
@@ -32,6 +33,14 @@ const Item = (props: ItemProps) => {
           color={colors.principal}
         />
       </div>
+      {props.inQueue && (
+        <AiOutlineCloudDownload
+          size={15}
+          color={colors.yellow}
+          style={{ top: 10, right: 10 }}
+          className="position-absolute"
+        />
+      )}
       {props.item?.status === RUNNING_STATUS && (
         <BiLoaderAlt
           size={15}

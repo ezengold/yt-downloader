@@ -13,18 +13,27 @@ import {
   PENDING_STATUS,
   RUNNING_STATUS,
 } from 'configs';
-import { prefeeredSizeOf, prefeeredSpeedOf } from 'helpers';
+import { prefeeredSizeOf } from 'helpers';
+import { Channels } from 'models';
 
 const ContentFolder = ({ overlayed }) => {
   const { colors } = useTheme();
 
   const { presentModal } = useApp();
 
-  const { currentItem, performDownload, stopDownload, deleteItemVideos } =
-    useStore();
+  const {
+    currentItem,
+    performDownload,
+    stopDownload,
+    deleteItemVideos,
+    queue,
+  } = useStore();
 
   const startDownload = () => {
-    if ([PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)) {
+    if (
+      [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status) &&
+      !queue.includes(currentItem?.id)
+    ) {
       performDownload(currentItem?.id);
     }
   };
@@ -66,9 +75,16 @@ const ContentFolder = ({ overlayed }) => {
         message: 'Do you really want to delete the selected items ?',
       },
       onHide: (status) => {
-        deleteItemVideos(currentItem?.id, selectedIds);
+        if (status === true) deleteItemVideos(currentItem?.id, selectedIds);
+        setSelectedIds([]);
       },
     });
+  };
+
+  const openItemFolder = () => {
+    window.electron.ipcRenderer.sendMessage(Channels.OPEN_A_PATH, [
+      currentItem?.location,
+    ]);
   };
 
   return (
@@ -113,11 +129,24 @@ const ContentFolder = ({ overlayed }) => {
               >
                 {currentItem?.items?.length} videos
               </Text>
-              <Text>Saved at : {currentItem?.location || '-'}</Text>
+              <View className="d-flex align-items-center">
+                Saved at :
+                <Text
+                  className="cursor-pointer ms-2"
+                  color={colors.principal}
+                  onClick={openItemFolder}
+                >
+                  {currentItem?.location || '-'}
+                </Text>
+              </View>
             </View>
             <Text size="25px" font={AppFonts.SEMIBOLD} className="mt-2">
-              {prefeeredSpeedOf(currentItem?.currentSpeed)?.value?.toFixed(0)}{' '}
-              {prefeeredSpeedOf(currentItem?.currentSpeed)?.unit?.title}
+              {
+                currentItem?.items?.filter(
+                  (el) => el?.status === COMPLETED_STATUS
+                )?.length
+              }
+              /{currentItem?.items?.length} completed
             </Text>
           </div>
           <div className="d-flex align-items-center justify-content-end">
@@ -132,7 +161,9 @@ const ContentFolder = ({ overlayed }) => {
               size={30}
               color={`${colors.principal}`}
               opacity={
-                [PENDING_STATUS, CANCELED_STATUS].includes(currentItem?.status)
+                [PENDING_STATUS, CANCELED_STATUS].includes(
+                  currentItem?.status
+                ) && !queue.includes(currentItem?.id)
                   ? 1
                   : 0.5
               }
@@ -184,6 +215,7 @@ const ContentFolder = ({ overlayed }) => {
                 </th>
                 <th className="text-start">Name</th>
                 <th className="text-start">Status</th>
+                <th className="text-start">Téléchargé</th>
                 <th
                   style={{
                     borderRadius: '0 5px 5px 0',
@@ -242,7 +274,7 @@ const ContentFolder = ({ overlayed }) => {
                               : 100
                           }
                           width="150px"
-                          background="transparent"
+                          background={colors.principal}
                           foreground={colors.principal}
                           radius="5px"
                         />
@@ -263,6 +295,15 @@ const ContentFolder = ({ overlayed }) => {
                       )}
                     </td>
                     <td
+                      className="white-space-nowrap"
+                      style={{
+                        borderRadius: '0 5px 5px 0',
+                      }}
+                    >{`${prefeeredSizeOf(item?.currentSize)?.value?.toFixed(
+                      2
+                    )} ${prefeeredSizeOf(item?.currentSize)?.unit?.title}`}</td>
+                    <td
+                      className="white-space-nowrap"
                       style={{
                         borderRadius: '0 5px 5px 0',
                       }}

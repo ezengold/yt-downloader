@@ -15,7 +15,7 @@ import {
   SizeUnit,
   SpeedUnit,
 } from 'models';
-import { BiSearchAlt } from 'react-icons/bi';
+import { BiLoaderAlt } from 'react-icons/bi';
 import moment from 'moment';
 import { DATE_FORMAT, PENDING_STATUS } from 'configs';
 import styled from 'styled-components';
@@ -31,6 +31,19 @@ const NewDownload = () => {
 
   const ref = React.useRef();
 
+  const [downloadPath, setDownloadPath] = useState(downloadLocation);
+
+  const updatePath = () => {
+    window.electron.ipcRenderer.sendMessage(Channels.PICK_DOWNLOAD_LOCATION, [
+      downloadPath,
+    ]);
+  };
+
+  const onPathChanged = React.useCallback(
+    (path?: string) => setDownloadPath((old) => path || old),
+    [item, downloadLocation]
+  );
+
   const { closeModal, presentAlert } = useApp();
 
   const [showSizes, setShowSizes] = useState(false);
@@ -39,7 +52,7 @@ const NewDownload = () => {
 
   const [fetchingContents, setFetchingContents] = useState(false);
 
-  useClickOutside(ref, fetchingContents ? () => {} : closeModal);
+  useClickOutside(ref, fetchingContents || seeding ? () => {} : closeModal);
 
   const closeOnEscape = (e: { key: string }) => {
     if (e?.key === 'Escape') closeModal();
@@ -150,7 +163,7 @@ const NewDownload = () => {
         if (Array.isArray(response?.value)) {
           const updatedItem: DownloadItem = {
             ...item,
-            location: downloadLocation,
+            location: downloadPath,
             items: item?.items?.map((el) => {
               const current = response?.value?.find(
                 (s: any) => s?.video_id === el?.video_id
@@ -163,6 +176,8 @@ const NewDownload = () => {
                       current?.video_size || 0,
                       SizeUnit.BYTES
                     ),
+                    download_url: current?.download_url,
+                    expires_at: current?.expires_at,
                   }
                 : el;
             }),
@@ -197,7 +212,7 @@ const NewDownload = () => {
         presentAlert({ kind: 'error', message: response?.value as string });
       }
     },
-    [item, downloadLocation]
+    [item, downloadLocation, downloadPath]
   );
 
   useEffect(() => {
@@ -210,14 +225,21 @@ const NewDownload = () => {
       Channels.SEED_VIDEO_SIZE,
       handleAddDownloadItem
     );
+    window.electron.ipcRenderer.on(
+      Channels.PICK_DOWNLOAD_LOCATION,
+      onPathChanged
+    );
     return () => {
       document.removeEventListener('keydown', closeOnEscape);
       window.electron.ipcRenderer?.removeAllListeners(
         Channels.PLAYLIST_CONTENTS
       );
       window.electron.ipcRenderer?.removeAllListeners(Channels.SEED_VIDEO_SIZE);
+      window.electron.ipcRenderer?.removeAllListeners(
+        Channels.PICK_DOWNLOAD_LOCATION
+      );
     };
-  }, [link, item]);
+  }, [link, item, downloadPath]);
 
   return (
     <div
@@ -281,9 +303,10 @@ const NewDownload = () => {
             onClick={handleSubmit}
           >
             {fetchingContents ? (
-              <BiSearchAlt
+              <BiLoaderAlt
                 size={18}
-                className="animate__animated animate__heartBeat animate__tada animate__infinite	infinite"
+                color={colors.principal}
+                className=" ezen-indicator"
               />
             ) : (
               'Search'
@@ -340,9 +363,9 @@ const NewDownload = () => {
                     color={colors.principal}
                     font={AppFonts.REGULAR}
                     className="ms-1 cursor-pointer"
-                    onClick={!seeding ? updateDownloadLocation : () => {}}
+                    onClick={!seeding ? updatePath : () => {}}
                   >
-                    {downloadLocation}
+                    {downloadPath}
                   </Text>
                 </View>
               </div>

@@ -60,9 +60,14 @@ export class Channels {
   static SET_DEFAULT_DOWNLOAD_LOCATION = 'SET_DEFAULT_DOWNLOAD_LOCATION';
 
   /**
-   * Built in ipc example
+   * Choose a download location by default
    */
-  static IPC_EXAMPLE = 'ipc-example';
+  static PICK_DOWNLOAD_LOCATION = 'PICK_DOWNLOAD_LOCATION';
+
+  /**
+   * Open a location
+   */
+  static OPEN_A_PATH = 'OPEN_A_PATH';
 
   /**
    * Channel when error occured

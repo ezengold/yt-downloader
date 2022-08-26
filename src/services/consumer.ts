@@ -137,8 +137,8 @@ export class MainServer {
 
   downloadVideos(videoIds: string) {
     const pythonServer = spawn(
-      'python3',
-      [`${__dirname}/server.py`, Channels.START_VIDEOS_DOWNLOAD, videoIds],
+      'node',
+      [`${__dirname}/downloader.js`, videoIds],
       {
         env: {
           PATH: process.env.PATH,
@@ -164,16 +164,12 @@ export class MainServer {
 
       if (!response?.success) {
         if (response?.topic === Channels.UNKNOWN_ERROR) {
-          // console.log({ data: data?.toString() });
+          console.log({ data: data?.toString() });
           this.mainWindow?.webContents.send(
             'openAlert',
             'An unexpected error occured !'
           );
         } else {
-          this.mainWindow?.webContents.send(
-            Channels.ERROR_OCCURED,
-            JSON.stringify(response)
-          );
           this.mainWindow?.webContents.send('openAlert', response?.value);
         }
       }

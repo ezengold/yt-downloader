@@ -24,6 +24,11 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/no-inferrable-types': 'off',
     'no-lonely-if': 'off',
+    'no-plusplus': 'off',
+    'promise/catch-or-return': 'off',
+    'no-await-in-loop': 'off',
+    'no-restricted-syntax': 'off',
+    'consistent-return': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,
