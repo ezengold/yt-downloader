@@ -34,3 +34,7 @@ package-lock.json
 src/services/build
 src/services/dist
 src/services/*.spec
+
+src/cmd/*.exe
+src/cmd/server-darwin
+src/cmd/server-linux
