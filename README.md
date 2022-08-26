@@ -9,9 +9,6 @@ This app let you download any youtube playlist
 - Support `light/dark` theme
 - Flexibility to change theme colors
 
-
-![Demo yt-downloader](/assets/short.gif?raw=true 'demo-yt-downloader')
-
 ## Next to come
 
 - Support single videos download
