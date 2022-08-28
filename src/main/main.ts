@@ -5,7 +5,7 @@ import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { AppDatabase } from '../database';
-import { MainServer } from '../services/consumer';
+import { MainServer } from '../services';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { Channels } from '../models';
@@ -72,7 +72,7 @@ const createWindow = async () => {
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
+        : path.join(__dirname, '../../.erb/dll/preload.js')
     },
   });
 

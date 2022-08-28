@@ -9,6 +9,7 @@ import { BsPlayFill, BsStopFill } from 'react-icons/bs';
 import {
   CANCELED_STATUS,
   COMPLETED_STATUS,
+  EXPIRED_STATUS,
   MODALS,
   PENDING_STATUS,
   RUNNING_STATUS,
@@ -277,6 +278,8 @@ const ContentFolder = ({ overlayed }) => {
                               ? colors.yellow
                               : item?.status === COMPLETED_STATUS
                               ? colors.green
+                              : item?.status === EXPIRED_STATUS
+                              ? colors.red
                               : colors.text
                           }
                         >
